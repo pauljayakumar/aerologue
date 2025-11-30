@@ -1,0 +1,356 @@
+@import "tailwindcss";
+
+/* ============================================
+   AEROLOGUE DESIGN SYSTEM
+   Mood: Warm & Friendly
+   Theme: Dark/Light with toggle
+   ============================================ */
+
+/* Light Mode (default) */
+:root {
+  /* Background */
+  --background: #FAFAFA;
+  --surface: #FFFFFF;
+  --surface-alt: #F4F4F5;
+
+  /* Borders */
+  --border: #E4E4E7;
+  --border-hover: #D4D4D8;
+
+  /* Text */
+  --foreground: #18181B;
+  --foreground-secondary: #71717A;
+  --foreground-muted: #A1A1AA;
+
+  /* Feature Colors */
+  --color-map: #0EA5E9;
+  --color-map-hover: #0284C7;
+  --color-crossing: #F97316;
+  --color-crossing-hover: #EA580C;
+  --color-wallet: #A855F7;
+  --color-wallet-hover: #9333EA;
+  --color-games: #22C55E;
+  --color-games-hover: #16A34A;
+  --color-messages: #EC4899;
+  --color-messages-hover: #DB2777;
+
+  /* Semantic Colors */
+  --color-success: #22C55E;
+  --color-warning: #F59E0B;
+  --color-error: #EF4444;
+  --color-info: #3B82F6;
+
+  /* Rarity Colors */
+  --color-common: #71717A;
+  --color-uncommon: #22C55E;
+  --color-rare: #3B82F6;
+  --color-epic: #A855F7;
+  --color-legendary-start: #F59E0B;
+  --color-legendary-end: #F97316;
+
+  /* Shadows */
+  --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.05);
+  --shadow-md: 0 4px 6px rgba(0, 0, 0, 0.07);
+  --shadow-lg: 0 10px 15px rgba(0, 0, 0, 0.1);
+  --shadow-xl: 0 20px 25px rgba(0, 0, 0, 0.1);
+}
+
+/* Dark Mode */
+.dark {
+  --background: #0A0A0B;
+  --surface: #18181B;
+  --surface-alt: #27272A;
+
+  --border: #3F3F46;
+  --border-hover: #52525B;
+
+  --foreground: #FAFAFA;
+  --foreground-secondary: #A1A1AA;
+  --foreground-muted: #71717A;
+
+  /* Shadows for dark mode */
+  --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.3);
+  --shadow-md: 0 4px 6px rgba(0, 0, 0, 0.4);
+  --shadow-lg: 0 10px 15px rgba(0, 0, 0, 0.5);
+  --shadow-xl: 0 20px 25px rgba(0, 0, 0, 0.5);
+}
+
+/* System preference dark mode fallback */
+@media (prefers-color-scheme: dark) {
+  :root:not(.light) {
+    --background: #0A0A0B;
+    --surface: #18181B;
+    --surface-alt: #27272A;
+
+    --border: #3F3F46;
+    --border-hover: #52525B;
+
+    --foreground: #FAFAFA;
+    --foreground-secondary: #A1A1AA;
+    --foreground-muted: #71717A;
+
+    --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.3);
+    --shadow-md: 0 4px 6px rgba(0, 0, 0, 0.4);
+    --shadow-lg: 0 10px 15px rgba(0, 0, 0, 0.5);
+    --shadow-xl: 0 20px 25px rgba(0, 0, 0, 0.5);
+  }
+}
+
+/* Tailwind Theme Extension */
+@theme inline {
+  /* Colors */
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --color-surface: var(--surface);
+  --color-surface-alt: var(--surface-alt);
+  --color-border: var(--border);
+  --color-border-hover: var(--border-hover);
+  --color-muted: var(--foreground-muted);
+  --color-secondary: var(--foreground-secondary);
+
+  /* Feature colors */
+  --color-map: var(--color-map);
+  --color-crossing: var(--color-crossing);
+  --color-wallet: var(--color-wallet);
+  --color-games: var(--color-games);
+  --color-messages: var(--color-messages);
+
+  /* Semantic */
+  --color-success: var(--color-success);
+  --color-warning: var(--color-warning);
+  --color-error: var(--color-error);
+  --color-info: var(--color-info);
+
+  /* Fonts */
+  --font-sans: var(--font-geist-sans), system-ui, sans-serif;
+  --font-mono: var(--font-geist-mono), monospace;
+}
+
+/* Base Styles */
+body {
+  background: var(--background);
+  color: var(--foreground);
+  font-family: var(--font-sans, system-ui, sans-serif);
+  transition: background-color 0.2s ease, color 0.2s ease;
+}
+
+/* Smooth transitions for theme toggle */
+*, *::before, *::after {
+  transition: background-color 0.2s ease, border-color 0.2s ease, color 0.2s ease;
+}
+
+/* Scrollbar Styling */
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: var(--surface-alt);
+}
+
+::-webkit-scrollbar-thumb {
+  background: var(--border);
+  border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: var(--border-hover);
+}
+
+/* Selection */
+::selection {
+  background: var(--color-map);
+  color: white;
+}
+
+/* Focus Ring */
+:focus-visible {
+  outline: 2px solid var(--color-map);
+  outline-offset: 2px;
+}
+
+/* ============================================
+   UTILITY CLASSES
+   ============================================ */
+
+/* Feature color backgrounds */
+.bg-feature-map { background-color: var(--color-map); }
+.bg-feature-crossing { background-color: var(--color-crossing); }
+.bg-feature-wallet { background-color: var(--color-wallet); }
+.bg-feature-games { background-color: var(--color-games); }
+.bg-feature-messages { background-color: var(--color-messages); }
+
+/* Feature color text */
+.text-feature-map { color: var(--color-map); }
+.text-feature-crossing { color: var(--color-crossing); }
+.text-feature-wallet { color: var(--color-wallet); }
+.text-feature-games { color: var(--color-games); }
+.text-feature-messages { color: var(--color-messages); }
+
+/* Rarity backgrounds */
+.bg-rarity-common { background-color: var(--color-common); }
+.bg-rarity-uncommon { background-color: var(--color-uncommon); }
+.bg-rarity-rare { background-color: var(--color-rare); }
+.bg-rarity-epic { background-color: var(--color-epic); }
+.bg-rarity-legendary {
+  background: linear-gradient(135deg, var(--color-legendary-start), var(--color-legendary-end));
+}
+
+/* Card styles */
+.card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 16px;
+  box-shadow: var(--shadow-md);
+}
+
+.card:hover {
+  border-color: var(--border-hover);
+  box-shadow: var(--shadow-lg);
+}
+
+/* Button base */
+.btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 12px 24px;
+  border-radius: 12px;
+  font-weight: 600;
+  transition: all 0.2s ease;
+  cursor: pointer;
+  border: none;
+}
+
+.btn:hover {
+  transform: translateY(-2px);
+  box-shadow: var(--shadow-lg);
+}
+
+.btn:active {
+  transform: translateY(0);
+}
+
+/* Primary buttons for each feature */
+.btn-map {
+  background: var(--color-map);
+  color: white;
+}
+.btn-map:hover { background: var(--color-map-hover); }
+
+.btn-crossing {
+  background: var(--color-crossing);
+  color: white;
+}
+.btn-crossing:hover { background: var(--color-crossing-hover); }
+
+.btn-wallet {
+  background: var(--color-wallet);
+  color: white;
+}
+.btn-wallet:hover { background: var(--color-wallet-hover); }
+
+.btn-games {
+  background: var(--color-games);
+  color: white;
+}
+.btn-games:hover { background: var(--color-games-hover); }
+
+.btn-messages {
+  background: var(--color-messages);
+  color: white;
+}
+.btn-messages:hover { background: var(--color-messages-hover); }
+
+/* Secondary button */
+.btn-secondary {
+  background: var(--surface-alt);
+  color: var(--foreground);
+  border: 1px solid var(--border);
+}
+.btn-secondary:hover {
+  background: var(--border);
+}
+
+/* Ghost button */
+.btn-ghost {
+  background: transparent;
+  color: var(--foreground-secondary);
+}
+.btn-ghost:hover {
+  background: var(--surface-alt);
+  color: var(--foreground);
+}
+
+/* ============================================
+   MAP & FLIGHT MARKERS
+   ============================================ */
+
+/* Flight marker container - ensures proper rotation from center */
+.flight-marker {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transform-origin: center center;
+  will-change: transform;
+}
+
+.flight-marker img {
+  pointer-events: none;
+  user-select: none;
+  -webkit-user-drag: none;
+}
+
+/* Hover effect for flight markers */
+.flight-marker:hover {
+  filter: brightness(1.2) drop-shadow(0 0 8px var(--color-map));
+  z-index: 100 !important;
+}
+
+/* MapLibre overrides for cleaner look */
+.maplibregl-popup-content {
+  background: var(--surface) !important;
+  color: var(--foreground) !important;
+  border: 1px solid var(--border) !important;
+  border-radius: 12px !important;
+  box-shadow: var(--shadow-lg) !important;
+  padding: 12px 16px !important;
+}
+
+.maplibregl-popup-tip {
+  border-top-color: var(--surface) !important;
+}
+
+.maplibregl-ctrl-group {
+  background: var(--surface) !important;
+  border: 1px solid var(--border) !important;
+  border-radius: 8px !important;
+  overflow: hidden;
+}
+
+.maplibregl-ctrl-group button {
+  background: var(--surface) !important;
+  color: var(--foreground) !important;
+}
+
+.maplibregl-ctrl-group button:hover {
+  background: var(--surface-alt) !important;
+}
+
+/* MapLibre Map Container - Critical for full-height rendering */
+.maplibregl-map {
+  width: 100% !important;
+  height: 100% !important;
+}
+
+.maplibregl-canvas-container {
+  width: 100% !important;
+  height: 100% !important;
+}
+
+.maplibregl-canvas {
+  width: 100% !important;
+  height: 100% !important;
+}

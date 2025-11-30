@@ -1,0 +1,633 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Aerologue Color Palette</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      background: #f4f4f5;
+      padding: 40px;
+      min-height: 100vh;
+    }
+
+    h1 {
+      text-align: center;
+      margin-bottom: 40px;
+      color: #18181b;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 12px;
+    }
+
+    h1 img {
+      width: 48px;
+      height: 48px;
+    }
+
+    h2 {
+      margin: 40px 0 20px;
+      color: #18181b;
+      border-bottom: 2px solid #e4e4e7;
+      padding-bottom: 10px;
+    }
+
+    .palette-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+      gap: 20px;
+      margin-bottom: 40px;
+    }
+
+    .color-card {
+      background: white;
+      border-radius: 16px;
+      overflow: hidden;
+      box-shadow: 0 4px 6px rgba(0,0,0,0.07);
+    }
+
+    .color-swatch {
+      height: 120px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 32px;
+    }
+
+    .color-swatch img {
+      width: 60px;
+      height: 60px;
+      object-fit: contain;
+    }
+
+    .color-info {
+      padding: 16px;
+    }
+
+    .color-name {
+      font-weight: 600;
+      color: #18181b;
+      margin-bottom: 4px;
+    }
+
+    .color-hex {
+      font-family: 'Monaco', 'Consolas', monospace;
+      font-size: 14px;
+      color: #71717a;
+      margin-bottom: 4px;
+    }
+
+    .color-usage {
+      font-size: 12px;
+      color: #a1a1aa;
+    }
+
+    /* Dark mode preview section */
+    .dark-preview {
+      background: #0a0a0b;
+      padding: 40px;
+      border-radius: 24px;
+      margin: 40px 0;
+    }
+
+    .dark-preview h2 {
+      color: #fafafa;
+      border-bottom-color: #3f3f46;
+    }
+
+    .dark-preview .color-card {
+      background: #18181b;
+    }
+
+    .dark-preview .color-name {
+      color: #fafafa;
+    }
+
+    .dark-preview .color-hex {
+      color: #a1a1aa;
+    }
+
+    .dark-preview .color-usage {
+      color: #71717a;
+    }
+
+    /* Button preview */
+    .button-preview {
+      display: flex;
+      gap: 12px;
+      flex-wrap: wrap;
+      margin: 20px 0;
+    }
+
+    .btn {
+      padding: 12px 24px;
+      border-radius: 12px;
+      font-weight: 600;
+      border: none;
+      cursor: pointer;
+      color: white;
+      transition: all 0.2s;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .btn:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+    }
+
+    .btn img {
+      width: 20px;
+      height: 20px;
+      filter: brightness(0) invert(1);
+    }
+
+    /* Sample cards */
+    .sample-cards {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+      gap: 20px;
+      margin: 20px 0;
+    }
+
+    .sample-card {
+      background: white;
+      border-radius: 16px;
+      overflow: hidden;
+      box-shadow: 0 4px 6px rgba(0,0,0,0.07);
+    }
+
+    .sample-card-header {
+      padding: 20px;
+      color: white;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .sample-card-header img {
+      width: 32px;
+      height: 32px;
+      filter: brightness(0) invert(1);
+    }
+
+    .sample-card-body {
+      padding: 20px;
+    }
+
+    .sample-card-title {
+      font-size: 18px;
+      font-weight: 600;
+      margin-bottom: 8px;
+      color: #18181b;
+    }
+
+    .sample-card-text {
+      color: #71717a;
+      font-size: 14px;
+    }
+
+    /* Plane icons showcase */
+    .plane-icons {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+      gap: 20px;
+      margin: 20px 0;
+    }
+
+    .plane-icon-card {
+      background: white;
+      border-radius: 16px;
+      padding: 24px;
+      text-align: center;
+      box-shadow: 0 4px 6px rgba(0,0,0,0.07);
+    }
+
+    .plane-icon-card img {
+      width: 80px;
+      height: 80px;
+      margin-bottom: 12px;
+    }
+
+    .plane-icon-card .name {
+      font-weight: 600;
+      color: #18181b;
+      margin-bottom: 4px;
+    }
+
+    .plane-icon-card .file {
+      font-family: 'Monaco', 'Consolas', monospace;
+      font-size: 11px;
+      color: #a1a1aa;
+    }
+
+    /* Map preview */
+    .map-preview {
+      background: #1a1a2e;
+      border-radius: 16px;
+      padding: 40px;
+      margin: 20px 0;
+      position: relative;
+      min-height: 300px;
+    }
+
+    .map-preview h3 {
+      color: #fafafa;
+      margin-bottom: 20px;
+    }
+
+    .map-plane {
+      position: absolute;
+      width: 40px;
+      height: 40px;
+    }
+
+    .map-plane.blue { transform: rotate(45deg); }
+    .map-plane.coral { transform: rotate(-30deg); }
+    .map-plane.gray { transform: rotate(120deg); }
+    .map-plane.darkblue { transform: rotate(80deg); }
+    .map-plane.gold { transform: rotate(-60deg); }
+  </style>
+</head>
+<body>
+
+  <h1>
+    <img src="/icons/web/plane-blue.svg" alt="Aerologue">
+    Aerologue Color Palette
+  </h1>
+
+  <!-- Plane Icons -->
+  <h2>Plane Icons</h2>
+  <div class="plane-icons">
+    <div class="plane-icon-card">
+      <img src="/icons/web/plane-blue.svg" alt="Blue Plane">
+      <div class="name">Sky Blue</div>
+      <div class="file">plane-blue.svg</div>
+    </div>
+    <div class="plane-icon-card">
+      <img src="/icons/web/plane-coral.svg" alt="Coral Plane">
+      <div class="name">Coral</div>
+      <div class="file">plane-coral.svg</div>
+    </div>
+    <div class="plane-icon-card">
+      <img src="/icons/web/plane-gray.svg" alt="Gray Plane">
+      <div class="name">Gray</div>
+      <div class="file">plane-gray.svg</div>
+    </div>
+    <div class="plane-icon-card">
+      <img src="/icons/web/plane-darkblue.svg" alt="Dark Blue Plane">
+      <div class="name">Dark Blue</div>
+      <div class="file">plane-darkblue.svg</div>
+    </div>
+    <div class="plane-icon-card">
+      <img src="/icons/web/plane-palegold.svg" alt="Pale Gold Plane">
+      <div class="name">Pale Gold</div>
+      <div class="file">plane-palegold.svg</div>
+    </div>
+  </div>
+
+  <!-- Map Preview with Planes -->
+  <h2>Map Preview with Plane Icons</h2>
+  <div class="map-preview">
+    <h3>Live Flight Map</h3>
+    <img src="/icons/web/plane-blue.svg" class="map-plane blue" style="top: 60px; left: 100px;">
+    <img src="/icons/web/plane-coral.svg" class="map-plane coral" style="top: 120px; left: 250px;">
+    <img src="/icons/web/plane-gray.svg" class="map-plane gray" style="top: 80px; left: 400px;">
+    <img src="/icons/web/plane-darkblue.svg" class="map-plane darkblue" style="top: 180px; left: 180px;">
+    <img src="/icons/web/plane-palegold.svg" class="map-plane gold" style="top: 150px; left: 350px;">
+  </div>
+
+  <!-- Feature Colors -->
+  <h2>Feature Accent Colors</h2>
+  <div class="palette-grid">
+    <div class="color-card">
+      <div class="color-swatch" style="background: #0EA5E9;">
+        <img src="/icons/web/plane-blue.svg" alt="plane" style="filter: brightness(0) invert(1);">
+      </div>
+      <div class="color-info">
+        <div class="color-name">Sky Blue</div>
+        <div class="color-hex">#0EA5E9</div>
+        <div class="color-usage">Map / Flight Tracking</div>
+      </div>
+    </div>
+
+    <div class="color-card">
+      <div class="color-swatch" style="background: #F97316;">
+        <img src="/icons/web/plane-coral.svg" alt="plane" style="filter: brightness(0) invert(1);">
+      </div>
+      <div class="color-info">
+        <div class="color-name">Coral / Orange</div>
+        <div class="color-hex">#F97316</div>
+        <div class="color-usage">Crossings / Connections</div>
+      </div>
+    </div>
+
+    <div class="color-card">
+      <div class="color-swatch" style="background: #A855F7;">💎</div>
+      <div class="color-info">
+        <div class="color-name">Purple</div>
+        <div class="color-hex">#A855F7</div>
+        <div class="color-usage">Wallet / Badges</div>
+      </div>
+    </div>
+
+    <div class="color-card">
+      <div class="color-swatch" style="background: #22C55E;">🎮</div>
+      <div class="color-info">
+        <div class="color-name">Green</div>
+        <div class="color-hex">#22C55E</div>
+        <div class="color-usage">Games / Points</div>
+      </div>
+    </div>
+
+    <div class="color-card">
+      <div class="color-swatch" style="background: #EC4899;">💬</div>
+      <div class="color-info">
+        <div class="color-name">Pink</div>
+        <div class="color-hex">#EC4899</div>
+        <div class="color-usage">Messages / Social</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Button Preview -->
+  <h2>Button Preview</h2>
+  <div class="button-preview">
+    <button class="btn" style="background: #0EA5E9;">
+      <img src="/icons/web/plane-blue.svg" alt="">
+      Track Flight
+    </button>
+    <button class="btn" style="background: #F97316;">
+      <img src="/icons/web/plane-coral.svg" alt="">
+      View Crossing
+    </button>
+    <button class="btn" style="background: #A855F7;">Open Wallet</button>
+    <button class="btn" style="background: #22C55E;">Play Game</button>
+    <button class="btn" style="background: #EC4899;">Send Message</button>
+  </div>
+
+  <!-- Sample Feature Cards -->
+  <h2>Sample Feature Cards</h2>
+  <div class="sample-cards">
+    <div class="sample-card">
+      <div class="sample-card-header" style="background: linear-gradient(135deg, #0EA5E9, #0284C7);">
+        <img src="/icons/web/plane-blue.svg" alt="">
+        Live Map
+      </div>
+      <div class="sample-card-body">
+        <div class="sample-card-title">Track Flights</div>
+        <div class="sample-card-text">See where you are in the sky and discover flights around you.</div>
+      </div>
+    </div>
+
+    <div class="sample-card">
+      <div class="sample-card-header" style="background: linear-gradient(135deg, #F97316, #EA580C);">
+        <img src="/icons/web/plane-coral.svg" alt="">
+        Crossings
+      </div>
+      <div class="sample-card-body">
+        <div class="sample-card-title">Connect with Travelers</div>
+        <div class="sample-card-text">Wave to fellow passengers when your flights cross paths.</div>
+      </div>
+    </div>
+
+    <div class="sample-card">
+      <div class="sample-card-header" style="background: linear-gradient(135deg, #A855F7, #9333EA);">
+        💎 Wallet
+      </div>
+      <div class="sample-card-body">
+        <div class="sample-card-title">Collect Treasures</div>
+        <div class="sample-card-text">Earn badges and collectibles from your journeys.</div>
+      </div>
+    </div>
+
+    <div class="sample-card">
+      <div class="sample-card-header" style="background: linear-gradient(135deg, #22C55E, #16A34A);">
+        🎮 Games
+      </div>
+      <div class="sample-card-body">
+        <div class="sample-card-title">Play at 35,000ft</div>
+        <div class="sample-card-text">GeoQuiz and trivia based on where you're flying.</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Rarity Colors -->
+  <h2>Wallet Rarity Colors</h2>
+  <div class="palette-grid">
+    <div class="color-card">
+      <div class="color-swatch" style="background: #71717A;">🎫</div>
+      <div class="color-info">
+        <div class="color-name">Common</div>
+        <div class="color-hex">#71717A</div>
+        <div class="color-usage">Basic badges</div>
+      </div>
+    </div>
+
+    <div class="color-card">
+      <div class="color-swatch" style="background: #22C55E;">🎖️</div>
+      <div class="color-info">
+        <div class="color-name">Uncommon</div>
+        <div class="color-hex">#22C55E</div>
+        <div class="color-usage">Notable achievements</div>
+      </div>
+    </div>
+
+    <div class="color-card">
+      <div class="color-swatch" style="background: #3B82F6;">💠</div>
+      <div class="color-info">
+        <div class="color-name">Rare</div>
+        <div class="color-hex">#3B82F6</div>
+        <div class="color-usage">Special collectibles</div>
+      </div>
+    </div>
+
+    <div class="color-card">
+      <div class="color-swatch" style="background: #A855F7;">👑</div>
+      <div class="color-info">
+        <div class="color-name">Epic</div>
+        <div class="color-hex">#A855F7</div>
+        <div class="color-usage">Exceptional items</div>
+      </div>
+    </div>
+
+    <div class="color-card">
+      <div class="color-swatch" style="background: linear-gradient(135deg, #F59E0B, #F97316);">⭐</div>
+      <div class="color-info">
+        <div class="color-name">Legendary</div>
+        <div class="color-hex">#F59E0B → #F97316</div>
+        <div class="color-usage">Ultra rare treasures</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Dark Mode Preview -->
+  <div class="dark-preview">
+    <h2>Dark Mode Preview</h2>
+    <div class="palette-grid">
+      <div class="color-card">
+        <div class="color-swatch" style="background: #0A0A0B;"><span style="color: #fafafa;">Bg</span></div>
+        <div class="color-info">
+          <div class="color-name">Background</div>
+          <div class="color-hex">#0A0A0B</div>
+          <div class="color-usage">Page background</div>
+        </div>
+      </div>
+
+      <div class="color-card">
+        <div class="color-swatch" style="background: #18181B;"><span style="color: #fafafa;">Surface</span></div>
+        <div class="color-info">
+          <div class="color-name">Surface</div>
+          <div class="color-hex">#18181B</div>
+          <div class="color-usage">Cards, panels</div>
+        </div>
+      </div>
+
+      <div class="color-card">
+        <div class="color-swatch" style="background: #27272A;"><span style="color: #fafafa;">Alt</span></div>
+        <div class="color-info">
+          <div class="color-name">Surface Alt</div>
+          <div class="color-hex">#27272A</div>
+          <div class="color-usage">Secondary surfaces</div>
+        </div>
+      </div>
+
+      <div class="color-card">
+        <div class="color-swatch" style="background: #3F3F46;"><span style="color: #fafafa;">Border</span></div>
+        <div class="color-info">
+          <div class="color-name">Border</div>
+          <div class="color-hex">#3F3F46</div>
+          <div class="color-usage">Dividers, outlines</div>
+        </div>
+      </div>
+    </div>
+
+    <h3 style="color: #fafafa; margin: 20px 0;">Dark Mode Buttons</h3>
+    <div class="button-preview">
+      <button class="btn" style="background: #0EA5E9;">
+        <img src="/icons/web/plane-blue.svg" alt="">
+        Track Flight
+      </button>
+      <button class="btn" style="background: #F97316;">
+        <img src="/icons/web/plane-coral.svg" alt="">
+        View Crossing
+      </button>
+      <button class="btn" style="background: #A855F7;">Open Wallet</button>
+      <button class="btn" style="background: #22C55E;">Play Game</button>
+      <button class="btn" style="background: #EC4899;">Send Message</button>
+    </div>
+  </div>
+
+  <!-- Light Mode Neutrals -->
+  <h2>Light Mode Neutrals</h2>
+  <div class="palette-grid">
+    <div class="color-card">
+      <div class="color-swatch" style="background: #FAFAFA; border: 1px solid #e4e4e7;"><span style="color: #18181b;">Bg</span></div>
+      <div class="color-info">
+        <div class="color-name">Background</div>
+        <div class="color-hex">#FAFAFA</div>
+        <div class="color-usage">Page background</div>
+      </div>
+    </div>
+
+    <div class="color-card">
+      <div class="color-swatch" style="background: #FFFFFF; border: 1px solid #e4e4e7;"><span style="color: #18181b;">Surface</span></div>
+      <div class="color-info">
+        <div class="color-name">Surface</div>
+        <div class="color-hex">#FFFFFF</div>
+        <div class="color-usage">Cards, panels</div>
+      </div>
+    </div>
+
+    <div class="color-card">
+      <div class="color-swatch" style="background: #F4F4F5;"><span style="color: #18181b;">Alt</span></div>
+      <div class="color-info">
+        <div class="color-name">Surface Alt</div>
+        <div class="color-hex">#F4F4F5</div>
+        <div class="color-usage">Secondary surfaces</div>
+      </div>
+    </div>
+
+    <div class="color-card">
+      <div class="color-swatch" style="background: #E4E4E7;"><span style="color: #18181b;">Border</span></div>
+      <div class="color-info">
+        <div class="color-name">Border</div>
+        <div class="color-hex">#E4E4E7</div>
+        <div class="color-usage">Dividers, outlines</div>
+      </div>
+    </div>
+
+    <div class="color-card">
+      <div class="color-swatch" style="background: #18181B;"><span style="color: #fafafa;">Text</span></div>
+      <div class="color-info">
+        <div class="color-name">Text Primary</div>
+        <div class="color-hex">#18181B</div>
+        <div class="color-usage">Headings, body</div>
+      </div>
+    </div>
+
+    <div class="color-card">
+      <div class="color-swatch" style="background: #71717A;"><span style="color: #fafafa;">2nd</span></div>
+      <div class="color-info">
+        <div class="color-name">Text Secondary</div>
+        <div class="color-hex">#71717A</div>
+        <div class="color-usage">Captions, hints</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Semantic Colors -->
+  <h2>Semantic Colors</h2>
+  <div class="palette-grid">
+    <div class="color-card">
+      <div class="color-swatch" style="background: #22C55E;">✓</div>
+      <div class="color-info">
+        <div class="color-name">Success</div>
+        <div class="color-hex">#22C55E</div>
+        <div class="color-usage">Confirmations, online</div>
+      </div>
+    </div>
+
+    <div class="color-card">
+      <div class="color-swatch" style="background: #F59E0B;">⚠</div>
+      <div class="color-info">
+        <div class="color-name">Warning</div>
+        <div class="color-hex">#F59E0B</div>
+        <div class="color-usage">Alerts, attention</div>
+      </div>
+    </div>
+
+    <div class="color-card">
+      <div class="color-swatch" style="background: #EF4444;">✕</div>
+      <div class="color-info">
+        <div class="color-name">Error</div>
+        <div class="color-hex">#EF4444</div>
+        <div class="color-usage">Errors, destructive</div>
+      </div>
+    </div>
+
+    <div class="color-card">
+      <div class="color-swatch" style="background: #3B82F6;">ℹ</div>
+      <div class="color-info">
+        <div class="color-name">Info</div>
+        <div class="color-hex">#3B82F6</div>
+        <div class="color-usage">Information</div>
+      </div>
+    </div>
+  </div>
+
+  <p style="text-align: center; color: #71717a; margin-top: 60px; padding-bottom: 40px;">
+    Aerologue Design System • Warm & Friendly • Multi-Accent
+  </p>
+
+</body>
+</html>
