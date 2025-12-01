@@ -354,3 +354,19 @@ body {
   width: 100% !important;
   height: 100% !important;
 }
+
+/* Airport popup specific styling */
+.airport-popup .maplibregl-popup-content {
+  min-width: 180px;
+}
+
+.airport-popup .font-medium {
+  font-weight: 600;
+  color: var(--foreground);
+  margin-bottom: 4px;
+}
+
+.airport-popup .text-sm {
+  font-size: 0.875rem;
+  color: var(--foreground-secondary);
+}

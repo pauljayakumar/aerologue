@@ -166,6 +166,8 @@ All tables use **PAY_PER_REQUEST** billing mode (serverless, scales automaticall
 | GET | /admin/config | aerologue-admin-config | ✅ Active |
 | PUT | /admin/config | aerologue-admin-config | ✅ Active |
 | PUT | /admin/config/master | aerologue-admin-config | ✅ Active |
+| GET | /trails/{aircraft_id} | aerologue-trail-get | ✅ Active |
+| GET | /flights/{aircraft_id}/details | aerologue-flight-details | ✅ Active |
 
 ### CORS Configuration
 ```json
@@ -192,6 +194,9 @@ All tables use **PAY_PER_REQUEST** billing mode (serverless, scales automaticall
 | `aerologue-user-profile` | Node.js 20.x | aerologue-lambda-role | User profile CRUD + Cognito trigger |
 | `aerologue-email-forwarder` | Node.js 20.x | aerologue-email-forwarder-role | SES email forwarding |
 | `aerologue-admin-config` | Node.js 20.x | aerologue-lambda-role | Admin API controls & kill switches |
+| `aerologue-trail-store` | Node.js 20.x | aerologue-lambda-role | Store flight positions to S3 (EventBridge triggered) |
+| `aerologue-trail-get` | Node.js 20.x | aerologue-lambda-role | Retrieve flight trails from S3 |
+| `aerologue-flight-details` | Node.js 20.x | aerologue-lambda-role | Flight route info from AeroDataBox |
 
 ### IAM Role: aerologue-lambda-role
 
@@ -201,6 +206,16 @@ All tables use **PAY_PER_REQUEST** billing mode (serverless, scales automaticall
 - `AWSLambdaBasicExecutionRole` (CloudWatch Logs)
 - `aerologue-dynamodb-access` (DynamoDB CRUD on aerologue-* tables)
 - `aerologue-s3-access` (S3 access to media buckets)
+
+---
+
+## EventBridge - Scheduled Events
+
+| Rule Name | Schedule | Target | Status |
+|-----------|----------|--------|--------|
+| `aerologue-trail-store-trigger` | rate(1 minute) | aerologue-trail-store | ⏸️ Disabled |
+
+**Note:** Trail storage is disabled by default. Enable via Admin Console or AWS Console when ready.
 
 ---
 
@@ -333,7 +348,8 @@ VITE_S3_MEDIA_BUCKET=aerologue-media-prod
 
 | Parameter Name | Type | Purpose |
 |----------------|------|---------|
-| `aerologue-rapidapi-key` | SecureString | RapidAPI key for ADS-B Exchange & AeroDataBox |
+| `aerologue-rapidapi-key` | SecureString | RapidAPI key for ADS-B Exchange |
+| `aerologue-apimarket-key` | SecureString | API.Market key for AeroDataBox |
 | `aerologue-anthropic-api-key` | SecureString | Anthropic Claude API for quiz/factoid generation |
 
 **Usage in Lambda:**

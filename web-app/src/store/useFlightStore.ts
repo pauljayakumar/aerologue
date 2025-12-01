@@ -1,10 +1,18 @@
 // Flight Store using Zustand
 import { create } from 'zustand';
 import type { Flight, FlightPosition, TrackedFlight } from '@/types';
-import awsConfig from '@/lib/aws-config';
 
-// Always use AWS API Gateway (static export doesn't have local API routes)
-const FLIGHTS_API_URL = `${awsConfig.api.baseUrl}/flights`;
+// In development, use local API routes; in production (static export), use AWS API Gateway
+const getFlightsApiUrl = () => {
+  if (typeof window === 'undefined') return '/api/flights'; // SSR fallback
+  const isLocalhost = window.location.hostname === 'localhost';
+  if (isLocalhost) {
+    return '/api/flights'; // Local Next.js API route
+  }
+  // Production: AWS API Gateway (no /api prefix)
+  const awsApi = process.env.NEXT_PUBLIC_API_URL || 'https://mazzuw3qr6.execute-api.us-east-1.amazonaws.com/prod';
+  return `${awsApi}/flights`;
+};
 
 interface FlightStore {
   // State
@@ -38,9 +46,14 @@ export const useFlightStore = create<FlightStore>((set) => ({
   // Fetch flights from API (AWS Lambda in prod, local in dev)
   fetchFlights: async () => {
     try {
-      const response = await fetch(FLIGHTS_API_URL);
+      const url = getFlightsApiUrl();
+      console.log('Fetching flights from:', url);
+      const response = await fetch(url);
+      console.log('Response status:', response.status, response.statusText);
       if (!response.ok) {
-        throw new Error('Failed to fetch flights');
+        const text = await response.text();
+        console.error('Response body:', text);
+        throw new Error(`Failed to fetch flights: ${response.status}`);
       }
       const data = await response.json();
 

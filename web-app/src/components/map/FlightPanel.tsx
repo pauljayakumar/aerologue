@@ -1,7 +1,45 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useCallback } from 'react';
 import type { FlightPosition } from '@/types';
+
+// Flight details from AeroDataBox API
+interface FlightDetails {
+  aircraft_id: string;
+  flight_number: string | null;
+  callsign: string | null;
+  airline: {
+    name: string;
+    iata: string;
+    icao: string;
+  } | null;
+  aircraft: {
+    registration: string;
+    model: string;
+    type: string;
+  } | null;
+  departure: {
+    airport_iata: string | null;
+    airport_icao: string | null;
+    airport_name: string | null;
+    scheduled: string | null;
+    actual: string | null;
+    terminal: string | null;
+    gate: string | null;
+  } | null;
+  arrival: {
+    airport_iata: string | null;
+    airport_icao: string | null;
+    airport_name: string | null;
+    scheduled: string | null;
+    estimated: string | null;
+    terminal: string | null;
+    gate: string | null;
+  } | null;
+  status: string | null;
+  is_cargo: boolean;
+  fetched_at: string;
+}
 
 interface FlightPanelProps {
   flight: FlightPosition | null;
@@ -9,14 +47,51 @@ interface FlightPanelProps {
   onClose: () => void;
 }
 
+const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL || 'https://api.aerologue.com/prod';
+
 export default function FlightPanel({ flight, isOpen, onClose }: FlightPanelProps) {
   const [isAnimating, setIsAnimating] = useState(false);
+  const [flightDetails, setFlightDetails] = useState<FlightDetails | null>(null);
+  const [isLoadingDetails, setIsLoadingDetails] = useState(false);
+  const [detailsError, setDetailsError] = useState<string | null>(null);
+
+  // Fetch flight details when panel opens with a flight
+  const fetchFlightDetails = useCallback(async (icao24: string) => {
+    setIsLoadingDetails(true);
+    setDetailsError(null);
+    setFlightDetails(null);
+
+    try {
+      const response = await fetch(`${API_BASE_URL}/flights/${icao24}/details`);
+      const data = await response.json();
+
+      if (data.success && data.data) {
+        setFlightDetails(data.data);
+      } else if (data.disabled) {
+        setDetailsError('Route info temporarily unavailable');
+      } else {
+        setDetailsError(data.error || 'Route info not found');
+      }
+    } catch (error) {
+      console.error('Error fetching flight details:', error);
+      setDetailsError('Failed to load route info');
+    } finally {
+      setIsLoadingDetails(false);
+    }
+  }, []);
 
   useEffect(() => {
     if (isOpen) {
       setIsAnimating(true);
     }
   }, [isOpen]);
+
+  // Fetch details when flight changes and panel is open
+  useEffect(() => {
+    if (isOpen && flight?.icao24) {
+      fetchFlightDetails(flight.icao24);
+    }
+  }, [isOpen, flight?.icao24, fetchFlightDetails]);
 
   if (!flight && !isAnimating) return null;
 
@@ -85,6 +160,99 @@ export default function FlightPanel({ flight, isOpen, onClose }: FlightPanelProp
                   <div className="mt-3 pt-3 border-t border-border text-center">
                     <span className="text-muted">Aircraft: </span>
                     <span className="font-medium text-foreground">{flight.aircraftType}</span>
+                  </div>
+                )}
+              </div>
+
+              {/* Route Information */}
+              <div className="bg-gradient-to-r from-map/10 to-crossing/10 rounded-xl p-4 border border-map/20">
+                <h3 className="text-sm font-medium text-secondary mb-3 flex items-center">
+                  <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
+                  </svg>
+                  Flight Route
+                </h3>
+
+                {isLoadingDetails && (
+                  <div className="flex items-center justify-center py-4">
+                    <div className="animate-spin w-5 h-5 border-2 border-map border-t-transparent rounded-full mr-2" />
+                    <span className="text-sm text-muted">Loading route info...</span>
+                  </div>
+                )}
+
+                {detailsError && !isLoadingDetails && (
+                  <div className="text-center py-3">
+                    <p className="text-sm text-muted">{detailsError}</p>
+                  </div>
+                )}
+
+                {flightDetails && !isLoadingDetails && (
+                  <div className="flex items-center justify-between">
+                    {/* Departure */}
+                    <div className="text-center flex-1">
+                      <div className="text-2xl font-bold text-map">
+                        {flightDetails.departure?.airport_iata || '???'}
+                      </div>
+                      <div className="text-xs text-muted mt-1 truncate max-w-[100px] mx-auto" title={flightDetails.departure?.airport_name || undefined}>
+                        {flightDetails.departure?.airport_name || 'Unknown'}
+                      </div>
+                      {flightDetails.departure?.actual && (
+                        <div className="text-xs text-success mt-1">
+                          {new Date(flightDetails.departure.actual).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                        </div>
+                      )}
+                    </div>
+
+                    {/* Arrow */}
+                    <div className="flex-shrink-0 px-2">
+                      <div className="flex items-center text-muted">
+                        <div className="w-8 h-px bg-border"></div>
+                        <svg className="w-5 h-5 mx-1 text-crossing" fill="currentColor" viewBox="0 0 24 24">
+                          <path d="M21 16v-2l-8-5V3.5c0-.83-.67-1.5-1.5-1.5S10 2.67 10 3.5V9l-8 5v2l8-2.5V19l-2 1.5V22l3.5-1 3.5 1v-1.5L13 19v-5.5l8 2.5z"/>
+                        </svg>
+                        <div className="w-8 h-px bg-border"></div>
+                      </div>
+                    </div>
+
+                    {/* Arrival */}
+                    <div className="text-center flex-1">
+                      <div className="text-2xl font-bold text-crossing">
+                        {flightDetails.arrival?.airport_iata || '???'}
+                      </div>
+                      <div className="text-xs text-muted mt-1 truncate max-w-[100px] mx-auto" title={flightDetails.arrival?.airport_name || undefined}>
+                        {flightDetails.arrival?.airport_name || 'Unknown'}
+                      </div>
+                      {flightDetails.arrival?.estimated && (
+                        <div className="text-xs text-secondary mt-1">
+                          ETA: {new Date(flightDetails.arrival.estimated).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                )}
+
+                {/* Airline info if available */}
+                {flightDetails?.airline && (
+                  <div className="mt-3 pt-3 border-t border-border/50 text-center">
+                    <span className="text-sm text-muted">Operated by </span>
+                    <span className="text-sm font-medium text-foreground">{flightDetails.airline.name}</span>
+                    {flightDetails.flight_number && (
+                      <span className="text-sm text-map ml-2">({flightDetails.flight_number})</span>
+                    )}
+                  </div>
+                )}
+
+                {/* Status */}
+                {flightDetails?.status && (
+                  <div className="mt-2 text-center">
+                    <span className={`text-xs px-2 py-1 rounded-full ${
+                      flightDetails.status === 'En-Route' ? 'bg-success/20 text-success' :
+                      flightDetails.status === 'Landed' ? 'bg-map/20 text-map' :
+                      'bg-warning/20 text-warning'
+                    }`}>
+                      {flightDetails.status}
+                    </span>
                   </div>
                 )}
               </div>

@@ -1,17 +1,19 @@
 'use client';
 
-import { useState, useEffect, useCallback } from 'react';
-import FlightMap from '@/components/map/FlightMap';
+import { useState, useEffect, useCallback, useRef } from 'react';
+import FlightMap, { type FlightMapRef } from '@/components/map/FlightMap';
 import FlightPanel from '@/components/map/FlightPanel';
 import SearchBar from '@/components/map/SearchBar';
 import { useFlightStore } from '@/store/useFlightStore';
 import type { FlightPosition } from '@/types';
+import type { Airport } from '@/types/airport';
 
 export default function MapPage() {
   const [selectedFlight, setSelectedFlight] = useState<FlightPosition | null>(null);
   const [isPanelOpen, setIsPanelOpen] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
   const { fetchFlights, flights } = useFlightStore();
+  const mapRef = useRef<FlightMapRef | null>(null);
 
   useEffect(() => {
     // Simulate initial data load
@@ -34,24 +36,57 @@ export default function MapPage() {
   const handleFlightClick = useCallback((flight: FlightPosition) => {
     setSelectedFlight(flight);
     setIsPanelOpen(true);
+    // Show trail for selected flight
+    if (mapRef.current) {
+      mapRef.current.showTrail(flight.icao24);
+    }
   }, []);
 
   const handleClosePanel = useCallback(() => {
     setIsPanelOpen(false);
+    // Hide trail when closing panel
+    if (mapRef.current) {
+      mapRef.current.hideTrail();
+    }
     setTimeout(() => setSelectedFlight(null), 300);
+  }, []);
+
+  // Handle search result selection - fly to flight
+  const handleSelectFlight = useCallback((flight: FlightPosition) => {
+    // Navigate map to flight position
+    if (mapRef.current && flight.longitude && flight.latitude) {
+      mapRef.current.flyTo(flight.longitude, flight.latitude, 8);
+      // Show trail for selected flight
+      mapRef.current.showTrail(flight.icao24);
+    }
+    // Open flight panel
+    setSelectedFlight(flight);
+    setIsPanelOpen(true);
+  }, []);
+
+  // Handle search result selection - fly to airport
+  const handleSelectAirport = useCallback((airport: Airport) => {
+    // Navigate map to airport
+    if (mapRef.current) {
+      mapRef.current.flyTo(airport.lon, airport.lat, 12);
+    }
   }, []);
 
   return (
     <div className="h-[calc(100vh-4rem)] relative overflow-hidden">
       {/* Full-screen map */}
       <FlightMap
+        ref={mapRef}
         className="absolute inset-0"
         onFlightClick={handleFlightClick}
       />
 
       {/* Search overlay */}
       <div className="absolute top-4 left-1/2 -translate-x-1/2 z-10 w-full max-w-md px-4">
-        <SearchBar />
+        <SearchBar
+          onSelectFlight={handleSelectFlight}
+          onSelectAirport={handleSelectAirport}
+        />
       </div>
 
       {/* Stats bar */}
