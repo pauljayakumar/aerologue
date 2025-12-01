@@ -104,6 +104,7 @@ All tables use **PAY_PER_REQUEST** billing mode (serverless, scales automaticall
 | `aerologue-messages` | crossing_id (S) | message_id (S) | Crossing messages |
 | `aerologue-wallet` | user_id (S) | item_id (S) | Wallet items |
 | `aerologue-gamification` | user_id (S) | - | Points, achievements |
+| `aerologue-admin-config` | config_type (S) | - | Admin controls & API kill switches |
 
 ### Future Tables (Create When Needed)
 - `aerologue-vlogs` - Vlog content
@@ -160,6 +161,9 @@ All tables use **PAY_PER_REQUEST** billing mode (serverless, scales automaticall
 | Method | Path | Lambda | Status |
 |--------|------|--------|--------|
 | GET | /health | aerologue-health | ✅ Active |
+| GET | /admin/config | aerologue-admin-config | ✅ Active |
+| PUT | /admin/config | aerologue-admin-config | ✅ Active |
+| PUT | /admin/config/master | aerologue-admin-config | ✅ Active |
 
 ### CORS Configuration
 ```json
@@ -185,6 +189,7 @@ All tables use **PAY_PER_REQUEST** billing mode (serverless, scales automaticall
 | `aerologue-flights` | Node.js 20.x | aerologue-lambda-role | Flight data API (ADSB/OpenSky) |
 | `aerologue-user-profile` | Node.js 20.x | aerologue-lambda-role | User profile CRUD + Cognito trigger |
 | `aerologue-email-forwarder` | Node.js 20.x | aerologue-email-forwarder-role | SES email forwarding |
+| `aerologue-admin-config` | Node.js 20.x | aerologue-lambda-role | Admin API controls & kill switches |
 
 ### IAM Role: aerologue-lambda-role
 
