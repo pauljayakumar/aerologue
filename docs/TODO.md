@@ -24,6 +24,71 @@ Items to revisit when time permits.
 
 ---
 
+## MVP Decisions - Periodic Review
+
+### Airport Data Storage
+**Status:** 🟡 MVP - Static JSON
+**Added:** December 1, 2025
+**Review:** When need full 50K airport database or PostGIS queries
+
+**Current MVP Approach:**
+- Static JSON file with ~500-1000 major airports
+- Bundled with web app, loaded on page load
+- Used for search and map markers
+
+**Full Implementation (Future):**
+- Aurora PostgreSQL with PostGIS extension
+- ~50,000 airports with full metadata
+- Geospatial queries for nearby airports
+- Decision criteria:
+  - [ ] Need airport proximity search
+  - [ ] Need full airport metadata (terminals, runways, etc.)
+  - [ ] Need real-time airport schedule integration
+
+---
+
+### Flight Trail Storage
+**Status:** 🟡 MVP - S3 Hybrid
+**Added:** December 1, 2025
+**Review:** When need real-time analytics or faster trail queries
+
+**Current MVP Approach:**
+- S3 storage for position data (~$9/month)
+- 30-second position update intervals
+- DynamoDB index for fast lookups
+- Trail retrieval: ~200-500ms latency
+
+**Full Implementation (Future):**
+- Amazon Timestream for time-series data (~$615/month)
+- 5-second position updates for smoother trails
+- Real-time analytics and queries
+- Decision criteria:
+  - [ ] Need sub-100ms trail queries
+  - [ ] Need real-time crossing detection analytics
+  - [ ] Need historical flight analytics
+
+---
+
+### API Update Frequency
+**Status:** 🟡 MVP - 30 seconds
+**Added:** December 1, 2025
+**Review:** When need smoother real-time tracking
+
+**Current MVP Approach:**
+- Flight position updates every 30 seconds
+- Cost-effective, lower storage volume
+- ~4-7 mile gap between trail points at cruise
+
+**Full Implementation (Future):**
+- 5-second updates for smooth tracking
+- Higher storage costs but better UX
+- Decision criteria:
+  - [ ] User feedback indicates trails look "choppy"
+  - [ ] Need precise crossing detection timing
+  - [ ] Revenue supports increased costs
+
+---
+
 ## AWS - Periodic Review Items
 
 ### SES Sandbox Mode Review
@@ -51,3 +116,9 @@ Items to revisit when time permits.
 ---
 
 *Last updated: December 1, 2025*
+
+---
+
+## References
+
+- [MVP Architecture](mvp-architecture.md) - Detailed MVP decisions and cost analysis
