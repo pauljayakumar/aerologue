@@ -13,11 +13,20 @@ Example: `CMP-001.0` (Component 1, initial version)
 
 ### Backend Services
 
-#### CMP-001.0 - ADSB Data Service
+#### CMP-001.0 - ADSB Data Service ✅ IMPLEMENTED
 Service layer for consuming ADSB data from multiple paid API providers.
 - Handles provider failover and redundancy
 - Normalizes data from different providers into unified format
 - Used by: PLN-008.0
+
+**Implementation (Phase 1 - Web):**
+- **Location**: `lambda/flights/index.mjs`
+- **Primary Provider**: ADS-B Exchange (via RapidAPI)
+- **Fallback Provider**: OpenSky Network (free tier)
+- **Coverage**: 8 global regions for worldwide flight data
+- **Deduplication**: Merges overlapping region data by ICAO24
+- **Data normalization**: Converts both APIs to unified FlightPosition format
+- **Deployed**: AWS Lambda + API Gateway (REST endpoint)
 
 #### CMP-002.0 - Airport Data Service
 Service layer for airport information aggregation.
@@ -52,10 +61,11 @@ Data access layer for structured relational data.
 - ACID compliance for financial data
 - Used by: PLN-011.0
 
-#### CMP-018.0 - Document Data Repository (DynamoDB)
+#### CMP-018.0 - Document Data Repository (DynamoDB) ✅ IMPLEMENTED
 Data access layer for flexible document/key-value data.
 - Database: Amazon DynamoDB
 - Data stored:
+  - **User profiles** (settings, stats, preferences) ✅
   - Planes crossing information
   - Users on plane (session data)
   - Messages exchanged
@@ -66,7 +76,14 @@ Data access layer for flexible document/key-value data.
 - DAX caching for hot data
 - Used by: PLN-011.0
 
-#### CMP-019.0 - Data Transformation Service
+**Implementation (Phase 1 - Web):**
+- **Table**: `aerologue-user-profiles`
+- **Primary Key**: `user_id` (Cognito sub)
+- **Lambda**: `lambda/user-profile/index.mjs`
+- **Operations**: GET/PUT user profiles via API Gateway
+- **Auto-creation**: Cognito Post Confirmation trigger creates profile on signup
+
+#### CMP-019.0 - Data Transformation Service ✅ IMPLEMENTED
 ETL service for normalizing API data before database storage.
 - Provider-specific field mappings
 - Unit conversions (meters→feet, km/h→knots)
@@ -76,6 +93,13 @@ ETL service for normalizing API data before database storage.
 - Error handling and dead-letter queue
 - Reference: `data-dictionary.md` for complete mappings
 - Used by: CMP-001.0, CMP-002.0, PLN-023.0
+
+**Implementation (Phase 1 - Web):**
+- **Integrated into**: `lambda/flights/index.mjs` (CMP-001.0)
+- **Transforms**:
+  - ADS-B Exchange: hex→icao24, flight→callsign, alt_baro→altitude (feet), gs→velocity (knots)
+  - OpenSky: state[0]→icao24, state[7]×3.28084→altitude (m→ft), state[9]×1.94384→velocity (m/s→knots)
+- **Deduplication**: By ICAO24, prefers fresher data and ADSB Exchange over OpenSky
 
 #### CMP-020.0 - Data Subscription & Filtering Service
 Context-aware data filtering for WebSocket broadcast optimization.
@@ -132,7 +156,7 @@ Push notification and in-app messaging service.
 
 ### Authentication Components
 
-#### CMP-014.0 - Authentication Service (Cognito)
+#### CMP-014.0 - Authentication Service (Cognito) ✅ IMPLEMENTED
 AWS Cognito-based authentication for Phase 1 (MVP).
 - User pool management
 - Social identity providers (Apple, Google)
@@ -141,6 +165,15 @@ AWS Cognito-based authentication for Phase 1 (MVP).
 - **Abstraction layer:** Design with interface to allow future migration
 - Supports: FEA-016.0
 - Used by: PLN-020.0
+
+**Implementation (Phase 1 - Web):**
+- **User Pool**: `us-east-1_xxxxxxxxx` (aerologue-users)
+- **App Client**: Web client with SRP auth flow
+- **Verification**: Email with auto-verification enabled
+- **Post-Confirmation Trigger**: Lambda creates DynamoDB profile (CMP-018.0)
+- **Web Integration**: AWS Amplify JS SDK v6
+- **Store**: `web-app/src/store/useAuthStore.ts` (Zustand)
+- **Features**: Login, Register, Logout, Profile fetch/update
 
 #### CMP-015.0 - Custom Authentication Service (Future)
 Custom-built authentication service for Phase 2 (post-funding).
@@ -194,7 +227,7 @@ Client-side component for intelligent tile caching along flight routes.
 - Background download during airport WiFi
 - Used by: PLN-017.0
 
-#### CMP-011.0 - Map Renderer
+#### CMP-011.0 - Map Renderer ✅ IMPLEMENTED (Web)
 Client-side map rendering engine.
 - Based on MapLibre GL (open-source)
 - Handles layer blending (bundled → cached → live)
@@ -204,13 +237,23 @@ Client-side map rendering engine.
 - Aircraft icon markers with heading rotation (see CMP-024.0)
 - Used by: FEA-001.0, PLN-017.0
 
-#### CMP-024.0 - Aircraft Icon System
+**Implementation (Phase 1 - Web):**
+- **Component**: `web-app/src/components/map/FlightMap.tsx`
+- **Library**: MapLibre GL JS
+- **Base Style**: CARTO Dark Matter (free, no API key)
+- **Aircraft Layer**: GeoJSON source with symbol layer
+- **Smooth Animation**: requestAnimationFrame interpolation between API updates
+- **Position Interpolation**: Dead-reckoning based on heading/velocity with drift correction
+- **Icon Rotation**: `icon-rotate` property from heading field
+- **Performance**: Updates all aircraft positions every frame at 60fps
+
+#### CMP-024.0 - Aircraft Icon System ✅ IMPLEMENTED
 Aircraft type-specific icons for map visualization.
 - **Available Icons**: 737, 747, 777, 787, A320, A340, A350, A380, ATR72
 - **Sizes**: sm (32×32), md (48×48), lg (64×64) - all square for proper rotation
 - **Format**: PNG with transparency, gold/amber silhouettes
-- **Location**: `public/aircraft/optimized/`
-- **Mapping Utility**: `src/lib/aircraftIcons.ts`
+- **Location**: `web-app/public/aircraft/optimized/`
+- **Mapping Utility**: `web-app/src/lib/aircraftIcons.ts`
   - Maps 100+ ICAO aircraft type codes to available icons
   - Covers Boeing, Airbus, Embraer, Bombardier, ATR, regional jets
   - Smart fallback for unknown types based on manufacturer prefix
@@ -284,7 +327,7 @@ Real-time connectivity monitoring and UI status display.
 
 ### Web Application Components
 
-#### CMP-024.0 - Web Application (Non-Flutter)
+#### CMP-025.0 - Web Application (Non-Flutter) ✅ IMPLEMENTED
 Standalone web application for BaaS validation and browser-based access.
 
 **Purpose:**
@@ -292,27 +335,36 @@ Standalone web application for BaaS validation and browser-based access.
 - Tests all backend APIs, WebSockets, authentication, database operations
 - Standalone product in addition to native Flutter apps
 
-**Technology Stack:**
-- Framework: React, Vue.js, or Next.js
-- Maps: MapLibre GL JS (matches Flutter's MapLibre approach)
-- State: Redux/Zustand (React) or Pinia (Vue)
-- Auth: AWS Amplify JS SDK (for Cognito integration)
-- WebSocket: Native WebSocket API or Socket.io client
+**Technology Stack (Implemented):**
+- **Framework**: Next.js 15 (App Router, static export)
+- **Maps**: MapLibre GL JS
+- **State**: Zustand (useAuthStore, useFlightStore, useThemeStore)
+- **Auth**: AWS Amplify JS SDK v6 (Cognito integration)
+- **Styling**: Tailwind CSS
+- **Hosting**: S3 + CloudFront (demo.aerologue.com)
 
-**Features Supported:**
-- FEA-001.0 - Flight Tracking ✓
-- FEA-002.0 - Airport Information ✓
-- FEA-003.0 - Airport Live Information ✓
-- FEA-004.0 - Vlog Map ✓
-- FEA-005.0 - Greetings Between Planes ✓
-- FEA-006.0 - Live Geo News ✓
+**Features Status:**
+- FEA-001.0 - Flight Tracking ✅ Implemented
+- FEA-002.0 - Airport Information ⏳ Planned
+- FEA-003.0 - Airport Live Information ⏳ Planned
+- FEA-004.0 - Vlog Map ⏳ Planned
+- FEA-005.0 - Greetings Between Planes ⏳ Planned
+- FEA-006.0 - Live Geo News ⏳ Planned
 - FEA-007.0 - Airplane Games ✗ (Unity - Flutter only)
 - FEA-008.0 - Geoquiz ✗ (Unity - Flutter only)
-- FEA-009.0 - Gamification ✓
-- FEA-010.0 - Wallet Features ✓
-- FEA-016.0 - User Authentication ✓
+- FEA-009.0 - Gamification ⏳ Planned
+- FEA-010.0 - Wallet Features ⏳ Planned (UI stub exists)
+- FEA-016.0 - User Authentication ✅ Implemented
 
-**PWA Capabilities:**
+**Implemented Components:**
+- `FlightMap.tsx` - Real-time flight tracking with smooth animation
+- `FlightPanel.tsx` - Flight details sidebar
+- `SearchBar.tsx` - Flight/airport search (mock data)
+- `Header.tsx` - Navigation with auth state
+- Login/Register pages with Cognito integration
+- Theme toggle (dark/light mode)
+
+**PWA Capabilities (Planned):**
 - Service worker for offline support
 - Installable on desktop/mobile
 - Push notifications
