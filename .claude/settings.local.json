@@ -69,7 +69,15 @@
       "Bash(git add:*)",
       "Bash(git commit -m \"$(cat <<''EOF''\nInitial commit: Aerologue flight tracking application\n\nFeatures:\n- Real-time flight tracking with MapLibre GL visualization\n- AWS infrastructure (Cognito, Lambda, DynamoDB, API Gateway)\n- Next.js web app with static export for S3/CloudFront hosting\n- User authentication and profile management\n- Aircraft type icons and smooth position interpolation\n\n🤖 Generated with [Claude Code](https://claude.com/claude-code)\n\nCo-Authored-By: Claude <noreply@anthropic.com>\nEOF\n)\")",
       "Bash(git rm:*)",
-      "Bash(git reset:*)"
+      "Bash(git reset:*)",
+      "Bash(git remote add:*)",
+      "Bash(git push:*)",
+      "Bash(\"C:/Program Files/GitHub CLI/gh.exe\" repo view pauljayakumar/aerologue --json pushedAt,defaultBranchRef)",
+      "Bash(git config:*)",
+      "Bash(git commit:*)",
+      "Bash(aws ses:*)",
+      "Bash(powershell Compress-Archive:*)",
+      "Bash(aws sts get-caller-identity:*)"
     ],
     "deny": [],
     "ask": []

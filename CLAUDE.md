@@ -1,1 +1,2 @@
 - Periodically update the project-status.md file.
+- Please update relevant documents of changes that we make if they are not already planned always. After every coding please check.

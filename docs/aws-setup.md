@@ -120,6 +120,7 @@ All tables use **PAY_PER_REQUEST** billing mode (serverless, scales automaticall
 | `aerologue-media-prod` | User uploads, vlogs, avatars | No | Yes |
 | `aerologue-web-app` | Static web app hosting | Yes | No |
 | `aerologue-ads-media` | Ad creatives | No | No |
+| `aerologue-emails` | SES incoming email storage | No | No |
 
 ### aerologue-web-app Configuration
 - **Static Website Hosting:** Enabled
@@ -181,6 +182,9 @@ All tables use **PAY_PER_REQUEST** billing mode (serverless, scales automaticall
 | Function Name | Runtime | Role | Purpose |
 |---------------|---------|------|---------|
 | `aerologue-health` | Node.js 18.x | aerologue-lambda-role | Health check endpoint |
+| `aerologue-flights` | Node.js 20.x | aerologue-lambda-role | Flight data API (ADSB/OpenSky) |
+| `aerologue-user-profile` | Node.js 20.x | aerologue-lambda-role | User profile CRUD + Cognito trigger |
+| `aerologue-email-forwarder` | Node.js 20.x | aerologue-email-forwarder-role | SES email forwarding |
 
 ### IAM Role: aerologue-lambda-role
 
@@ -206,6 +210,46 @@ All tables use **PAY_PER_REQUEST** billing mode (serverless, scales automaticall
 - **Price Class:** PriceClass_100 (US, Canada, Europe)
 - **SSL:** ACM certificates (TLS 1.2)
 - **Error Handling:** 404 → /index.html (SPA support)
+
+---
+
+## SES - Email Service
+
+| Item | Value |
+|------|-------|
+| Domain | aerologue.com |
+| Verification Status | ✅ Verified |
+| DKIM Status | ✅ Enabled |
+| Rule Set | `aerologue-email-rules` |
+
+### Email Addresses
+
+| Address | Purpose | Forward To |
+|---------|---------|------------|
+| info@aerologue.com | Contact email | pauljayakumar@gmail.com |
+
+### DNS Records (SES)
+
+| Record | Type | Value |
+|--------|------|-------|
+| _amazonses.aerologue.com | TXT | `xI0ClSv/TbSLwTDNmoJ3Ns7OD1ya1fWIqf5z5jS6WZA=` |
+| aerologue.com | MX | `10 inbound-smtp.us-east-1.amazonaws.com` |
+| b3wvgo6jx35ae5a24eenvffhs44qgqzp._domainkey | CNAME | `...dkim.amazonses.com` |
+| z7xw7fecdq4pioznx2nwltym35mh7up2._domainkey | CNAME | `...dkim.amazonses.com` |
+| mrby2semmnjxwjzoesvnfityrz6w4zpm._domainkey | CNAME | `...dkim.amazonses.com` |
+
+### Email Flow
+
+1. Email sent to info@aerologue.com
+2. SES receives email (MX record)
+3. Email stored in S3 bucket `aerologue-emails/incoming/`
+4. Lambda `aerologue-email-forwarder` triggered
+5. Lambda forwards email to configured address
+
+### Pricing
+
+- **Receiving:** First 1,000 emails/month free, then $0.10/1,000
+- **Sending:** $0.10/1,000 emails
 
 ---
 
