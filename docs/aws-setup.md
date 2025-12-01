@@ -226,7 +226,7 @@ All tables use **PAY_PER_REQUEST** billing mode (serverless, scales automaticall
 
 | Address | Purpose | Forward To |
 |---------|---------|------------|
-| info@aerologue.com | Contact email | pauljayakumar@gmail.com |
+| info@aerologue.com | Contact email | samsonsamuel@live.co.uk |
 
 ### DNS Records (SES)
 
@@ -250,6 +250,35 @@ All tables use **PAY_PER_REQUEST** billing mode (serverless, scales automaticall
 
 - **Receiving:** First 1,000 emails/month free, then $0.10/1,000
 - **Sending:** $0.10/1,000 emails
+
+### Sandbox Mode (Current Status)
+
+⚠️ **SES is currently in SANDBOX mode**
+
+**Sandbox Restrictions:**
+- Can only SEND emails to verified addresses
+- Can only SEND FROM verified addresses/domains
+- Daily sending limit: 200 emails
+- Sending rate: 1 email/second
+
+**What works in sandbox:**
+- ✅ RECEIVING emails to info@aerologue.com (no restriction)
+- ✅ Storing emails in S3
+- ⚠️ FORWARDING only works if destination is verified
+
+**To verify samsonsamuel@live.co.uk for forwarding:**
+```bash
+aws ses verify-email-identity --email-address samsonsamuel@live.co.uk --region us-east-1
+```
+Then click the verification link sent to that email.
+
+**To request production access (removes all restrictions):**
+1. Go to AWS Console → SES → Account Dashboard
+2. Click "Request production access"
+3. Fill in use case (transactional emails, contact form responses)
+4. Wait 24-48 hours for approval
+
+**Periodic Review:** Check TODO.md for sandbox exit decision
 
 ---
 

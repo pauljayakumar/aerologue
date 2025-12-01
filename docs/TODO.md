@@ -24,4 +24,30 @@ Items to revisit when time permits.
 
 ---
 
-*Last updated: November 29, 2025*
+## AWS - Periodic Review Items
+
+### SES Sandbox Mode Review
+**Status:** 🟡 In Sandbox Mode
+**Added:** December 1, 2025
+**Review:** Before public launch or when need to send emails to unverified addresses
+
+**Current Limitations:**
+- Can only forward emails to verified addresses
+- 200 emails/day sending limit
+- 1 email/second rate limit
+
+**Decision Criteria for Production Access:**
+- [ ] Need to send transactional emails to users (password reset, notifications)
+- [ ] Need to forward contact emails without verifying each recipient
+- [ ] Launching publicly and expect external email communication
+
+**How to Exit Sandbox:**
+1. AWS Console → SES → Account Dashboard → "Request production access"
+2. Describe use case: "Transactional emails for user registration, password reset, and contact form responses"
+3. Wait 24-48 hours for approval
+
+**Note:** For now, ensure samsonsamuel@live.co.uk is verified to receive forwarded emails.
+
+---
+
+*Last updated: December 1, 2025*

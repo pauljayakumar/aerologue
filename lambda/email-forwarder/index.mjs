@@ -12,8 +12,8 @@ const CONFIG = {
   emailBucket: 'aerologue-emails',
   emailKeyPrefix: 'incoming/',
   forwardMapping: {
-    'info@aerologue.com': [process.env.FORWARD_TO || 'pauljayakumar@gmail.com'],
-    '@aerologue.com': [process.env.FORWARD_TO || 'pauljayakumar@gmail.com'], // Catch-all
+    'info@aerologue.com': [process.env.FORWARD_TO || 'samsonsamuel@live.co.uk'],
+    '@aerologue.com': [process.env.FORWARD_TO || 'samsonsamuel@live.co.uk'], // Catch-all
   },
   fromEmail: 'noreply@aerologue.com',
   subjectPrefix: '[Aerologue] ',
