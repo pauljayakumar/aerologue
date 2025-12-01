@@ -105,6 +105,7 @@ All tables use **PAY_PER_REQUEST** billing mode (serverless, scales automaticall
 | `aerologue-wallet` | user_id (S) | item_id (S) | Wallet items |
 | `aerologue-gamification` | user_id (S) | - | Points, achievements |
 | `aerologue-admin-config` | config_type (S) | - | Admin controls & API kill switches |
+| `aerologue-trail-index` | aircraft_id (S) | date_hour (S) | Index for S3 trail data |
 
 ### Future Tables (Create When Needed)
 - `aerologue-vlogs` - Vlog content
@@ -122,6 +123,7 @@ All tables use **PAY_PER_REQUEST** billing mode (serverless, scales automaticall
 | `aerologue-web-app` | Static web app hosting | Yes | No |
 | `aerologue-ads-media` | Ad creatives | No | No |
 | `aerologue-emails` | SES incoming email storage | No | No |
+| `aerologue-trails` | Flight position trail data | No | No |
 
 ### aerologue-web-app Configuration
 - **Static Website Hosting:** Enabled
