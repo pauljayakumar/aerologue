@@ -3,7 +3,7 @@
 import { useState, useRef, useEffect, useCallback } from 'react';
 import { searchAirports } from '@/lib/airports';
 import { useFlightStore } from '@/store/useFlightStore';
-import type { Airport, AirportSearchResult } from '@/types/airport';
+import type { Airport } from '@/types/airport';
 import type { FlightPosition } from '@/types';
 
 interface SearchResult {
@@ -11,7 +11,9 @@ interface SearchResult {
   id: string;
   title: string;
   subtitle: string;
+  secondaryInfo?: string;  // Additional info like airline name
   data: FlightPosition | Airport;
+  score: number;  // For sorting relevance
 }
 
 interface SearchBarProps {
@@ -19,75 +21,119 @@ interface SearchBarProps {
   onSelectFlight?: (flight: FlightPosition) => void;
 }
 
-// Common IATA to ICAO airline code mappings for search - moved outside component
-const AIRLINE_CODE_MAP: Record<string, string[]> = {
-    'BA': ['BAW'],           // British Airways
-    'AA': ['AAL'],           // American Airlines
-    'UA': ['UAL'],           // United Airlines
-    'DL': ['DAL'],           // Delta
-    'AF': ['AFR'],           // Air France
-    'LH': ['DLH'],           // Lufthansa
-    'EK': ['UAE'],           // Emirates
-    'QF': ['QFA'],           // Qantas
-    'SQ': ['SIA'],           // Singapore Airlines
-    'CX': ['CPA'],           // Cathay Pacific
-    'NH': ['ANA'],           // All Nippon Airways
-    'JL': ['JAL'],           // Japan Airlines
-    'KL': ['KLM'],           // KLM
-    'VS': ['VIR'],           // Virgin Atlantic
-    'EY': ['ETD'],           // Etihad
-    'QR': ['QTR'],           // Qatar Airways
-    'TK': ['THY'],           // Turkish Airlines
-    'IB': ['IBE'],           // Iberia
-    'AY': ['FIN'],           // Finnair
-    'SK': ['SAS'],           // SAS
-    'LX': ['SWR'],           // Swiss
-    'OS': ['AUA'],           // Austrian
-    'SN': ['BEL'],           // Brussels Airlines
-    'TP': ['TAP'],           // TAP Portugal
-    'AZ': ['ITY', 'AZA'],    // ITA Airways (former Alitalia)
-    'EI': ['EIN'],           // Aer Lingus
-    'U2': ['EZY'],           // easyJet
-    'FR': ['RYR'],           // Ryanair
-    'W6': ['WZZ'],           // Wizz Air
-    'VY': ['VLG'],           // Vueling
-    'AC': ['ACA'],           // Air Canada
-    'WN': ['SWA'],           // Southwest
-    'B6': ['JBU'],           // JetBlue
-    'AS': ['ASA'],           // Alaska Airlines
-    'NK': ['NKS'],           // Spirit Airlines
-    'F9': ['FFT'],           // Frontier
-    'WS': ['WJA'],           // WestJet
-    'LA': ['LAN'],           // LATAM
-    'AM': ['AMX'],           // Aeromexico
-    'AV': ['AVA'],           // Avianca
-    'CM': ['CMP'],           // Copa Airlines
-    'CA': ['CCA'],           // Air China
-    'MU': ['CES'],           // China Eastern
-    'CZ': ['CSN'],           // China Southern
-    'HU': ['CHH'],           // Hainan Airlines
-    'KE': ['KAL'],           // Korean Air
-    'OZ': ['AAR'],           // Asiana
-    'TG': ['THA'],           // Thai Airways
-    'MH': ['MAS'],           // Malaysia Airlines
-    'GA': ['GIA'],           // Garuda Indonesia
-    'PR': ['PAL'],           // Philippine Airlines
-    'CI': ['CAL'],           // China Airlines
-    'BR': ['EVA'],           // EVA Air
-    'VN': ['HVN'],           // Vietnam Airlines
-    'AI': ['AIC'],           // Air India
-    'ET': ['ETH'],           // Ethiopian Airlines
-    'SA': ['SAA'],           // South African Airways
-    'MS': ['MSR'],           // EgyptAir
-    'RJ': ['RJA'],           // Royal Jordanian
-    'GF': ['GFA'],           // Gulf Air
-    'WY': ['OMA'],           // Oman Air
-    'SV': ['SVA'],           // Saudi Arabian Airlines
-    'NZ': ['ANZ'],           // Air New Zealand
-    'FJ': ['FJI'],           // Fiji Airways
-    'JQ': ['JST'],           // Jetstar
-  'VA': ['VOZ'],           // Virgin Australia
+// IATA to ICAO airline code mappings with names
+const AIRLINE_MAP: Record<string, { icao: string[]; name: string }> = {
+  'BA': { icao: ['BAW'], name: 'British Airways' },
+  'AA': { icao: ['AAL'], name: 'American Airlines' },
+  'UA': { icao: ['UAL'], name: 'United Airlines' },
+  'DL': { icao: ['DAL'], name: 'Delta' },
+  'AF': { icao: ['AFR'], name: 'Air France' },
+  'LH': { icao: ['DLH'], name: 'Lufthansa' },
+  'EK': { icao: ['UAE'], name: 'Emirates' },
+  'QF': { icao: ['QFA'], name: 'Qantas' },
+  'SQ': { icao: ['SIA'], name: 'Singapore Airlines' },
+  'CX': { icao: ['CPA'], name: 'Cathay Pacific' },
+  'NH': { icao: ['ANA'], name: 'All Nippon Airways' },
+  'JL': { icao: ['JAL'], name: 'Japan Airlines' },
+  'KL': { icao: ['KLM'], name: 'KLM' },
+  'VS': { icao: ['VIR'], name: 'Virgin Atlantic' },
+  'EY': { icao: ['ETD'], name: 'Etihad' },
+  'QR': { icao: ['QTR'], name: 'Qatar Airways' },
+  'TK': { icao: ['THY'], name: 'Turkish Airlines' },
+  'IB': { icao: ['IBE', 'IBS'], name: 'Iberia' },
+  'AY': { icao: ['FIN'], name: 'Finnair' },
+  'SK': { icao: ['SAS'], name: 'SAS' },
+  'LX': { icao: ['SWR'], name: 'Swiss' },
+  'OS': { icao: ['AUA'], name: 'Austrian' },
+  'SN': { icao: ['BEL'], name: 'Brussels Airlines' },
+  'TP': { icao: ['TAP'], name: 'TAP Portugal' },
+  'AZ': { icao: ['ITY', 'AZA'], name: 'ITA Airways' },
+  'EI': { icao: ['EIN'], name: 'Aer Lingus' },
+  'U2': { icao: ['EZY'], name: 'easyJet' },
+  'FR': { icao: ['RYR'], name: 'Ryanair' },
+  'W6': { icao: ['WZZ'], name: 'Wizz Air' },
+  'VY': { icao: ['VLG'], name: 'Vueling' },
+  'AC': { icao: ['ACA'], name: 'Air Canada' },
+  'WN': { icao: ['SWA'], name: 'Southwest' },
+  'B6': { icao: ['JBU'], name: 'JetBlue' },
+  'AS': { icao: ['ASA'], name: 'Alaska Airlines' },
+  'NK': { icao: ['NKS'], name: 'Spirit Airlines' },
+  'F9': { icao: ['FFT'], name: 'Frontier' },
+  'WS': { icao: ['WJA'], name: 'WestJet' },
+  'LA': { icao: ['LAN'], name: 'LATAM' },
+  'AM': { icao: ['AMX'], name: 'Aeromexico' },
+  'AV': { icao: ['AVA'], name: 'Avianca' },
+  'CM': { icao: ['CMP'], name: 'Copa Airlines' },
+  'CA': { icao: ['CCA'], name: 'Air China' },
+  'MU': { icao: ['CES'], name: 'China Eastern' },
+  'CZ': { icao: ['CSN'], name: 'China Southern' },
+  'HU': { icao: ['CHH'], name: 'Hainan Airlines' },
+  'KE': { icao: ['KAL'], name: 'Korean Air' },
+  'OZ': { icao: ['AAR'], name: 'Asiana' },
+  'TG': { icao: ['THA'], name: 'Thai Airways' },
+  'MH': { icao: ['MAS'], name: 'Malaysia Airlines' },
+  'GA': { icao: ['GIA'], name: 'Garuda Indonesia' },
+  'PR': { icao: ['PAL'], name: 'Philippine Airlines' },
+  'CI': { icao: ['CAL'], name: 'China Airlines' },
+  'BR': { icao: ['EVA'], name: 'EVA Air' },
+  'VN': { icao: ['HVN'], name: 'Vietnam Airlines' },
+  'AI': { icao: ['AIC'], name: 'Air India' },
+  'ET': { icao: ['ETH'], name: 'Ethiopian Airlines' },
+  'SA': { icao: ['SAA'], name: 'South African Airways' },
+  'MS': { icao: ['MSR'], name: 'EgyptAir' },
+  'RJ': { icao: ['RJA'], name: 'Royal Jordanian' },
+  'GF': { icao: ['GFA'], name: 'Gulf Air' },
+  'WY': { icao: ['OMA'], name: 'Oman Air' },
+  'SV': { icao: ['SVA'], name: 'Saudi Arabian' },
+  'NZ': { icao: ['ANZ'], name: 'Air New Zealand' },
+  'FJ': { icao: ['FJI'], name: 'Fiji Airways' },
+  'JQ': { icao: ['JST'], name: 'Jetstar' },
+  'VA': { icao: ['VOZ'], name: 'Virgin Australia' },
+  'QX': { icao: ['QXE'], name: 'Horizon Air' },
+  'HA': { icao: ['HAL'], name: 'Hawaiian Airlines' },
+  'FX': { icao: ['FDX'], name: 'FedEx' },
+  '5X': { icao: ['UPS'], name: 'UPS' },
+  'K4': { icao: ['CKS'], name: 'Kalitta Air' },
+  'CV': { icao: ['CLX'], name: 'Cargolux' },
+  'OO': { icao: ['SKW'], name: 'SkyWest' },
+  'MQ': { icao: ['ENY'], name: 'Envoy Air' },
+  '9E': { icao: ['EDV'], name: 'Endeavor Air' },
+  'FZ': { icao: ['FDB'], name: 'flydubai' },
+  'G9': { icao: ['ABY'], name: 'Air Arabia' },
+  '6E': { icao: ['IGO'], name: 'IndiGo' },
+  'AK': { icao: ['AXM'], name: 'AirAsia' },
+  'TR': { icao: ['TGW'], name: 'Scoot' },
+  '5J': { icao: ['CEB'], name: 'Cebu Pacific' },
+  'VJ': { icao: ['VJC'], name: 'VietJet Air' },
+  'JT': { icao: ['LNI'], name: 'Lion Air' },
 };
+
+// Reverse lookup: ICAO prefix to airline name
+const ICAO_TO_AIRLINE: Record<string, string> = {};
+for (const [, data] of Object.entries(AIRLINE_MAP)) {
+  for (const icao of data.icao) {
+    ICAO_TO_AIRLINE[icao] = data.name;
+  }
+}
+
+// Get airline name from callsign
+function getAirlineName(callsign: string): string | null {
+  if (!callsign || callsign.length < 3) return null;
+  return ICAO_TO_AIRLINE[callsign.slice(0, 3).toUpperCase()] || null;
+}
+
+// Format altitude
+function formatAlt(alt: number | null | string | undefined): string {
+  if (alt === null || alt === undefined || alt === 'ground') return 'Ground';
+  const n = typeof alt === 'string' ? parseFloat(alt) : alt;
+  if (isNaN(n) || n < 100) return 'Ground';
+  return `${Math.round(n).toLocaleString()} ft`;
+}
+
+// Format speed
+function formatSpd(vel: number | null | undefined): string {
+  return vel ? `${Math.round(vel)} kts` : '';
+}
 
 export default function SearchBar({ onSelectAirport, onSelectFlight }: SearchBarProps) {
   const [query, setQuery] = useState('');
@@ -97,10 +143,8 @@ export default function SearchBar({ onSelectAirport, onSelectFlight }: SearchBar
   const inputRef = useRef<HTMLInputElement>(null);
   const { flights } = useFlightStore();
 
-  // Search function with debounce
+  // Search function
   const performSearch = useCallback(async (searchQuery: string) => {
-    // Debug logging
-    console.log('Search query:', searchQuery, 'Flights in store:', flights.size);
     if (searchQuery.length < 2) {
       setResults([]);
       return;
@@ -108,71 +152,84 @@ export default function SearchBar({ onSelectAirport, onSelectFlight }: SearchBar
 
     setIsLoading(true);
     const searchResults: SearchResult[] = [];
-    const upperQuery = searchQuery.toUpperCase();
+    const upperQuery = searchQuery.toUpperCase().trim();
 
-    // Check if query matches an IATA code and get ICAO equivalents
+    // Build ICAO variants for IATA airline code search
     const icaoVariants: string[] = [];
-    for (const [iata, icaoList] of Object.entries(AIRLINE_CODE_MAP)) {
+    for (const [iata, data] of Object.entries(AIRLINE_MAP)) {
       if (upperQuery.startsWith(iata)) {
-        // If searching "BA123", try "BAW123" too
         const flightNum = upperQuery.slice(iata.length);
-        icaoList.forEach(icao => icaoVariants.push(icao + flightNum));
+        data.icao.forEach(icao => icaoVariants.push(icao + flightNum));
       }
     }
-    console.log('ICAO variants for', upperQuery, ':', icaoVariants);
 
-    // Search flights by callsign or ICAO24
-    const flightArray = Array.from(flights.values());
-    const matchingFlights = flightArray
-      .filter(f => {
-        const callsign = f.callsign?.toUpperCase() || '';
-        const icao24 = f.icao24?.toUpperCase() || '';
+    // Search flights by multiple fields
+    for (const flight of flights.values()) {
+      const callsign = (flight.callsign || '').toUpperCase();
+      const icao24 = (flight.icao24 || '').toUpperCase();
+      const registration = (flight.registration || '').toUpperCase();
+      const aircraftType = (flight.aircraftType || '').toUpperCase();
 
-        // Direct match
-        if (callsign.includes(upperQuery) || icao24.includes(upperQuery)) {
-          return true;
-        }
+      let score = 0;
 
-        // IATA to ICAO match (e.g., "BA" finds "BAW")
-        for (const variant of icaoVariants) {
-          if (callsign.startsWith(variant) || (variant && callsign.includes(variant))) {
-            return true;
-          }
-        }
+      // Score based on match type
+      if (callsign === upperQuery) score = 100;
+      else if (callsign.startsWith(upperQuery)) score = 90;
+      else if (callsign.includes(upperQuery)) score = 80;
+      else if (icaoVariants.some(v => callsign.startsWith(v))) score = 85;
+      else if (registration === upperQuery) score = 95;
+      else if (registration.startsWith(upperQuery)) score = 75;
+      else if (registration.includes(upperQuery)) score = 65;
+      else if (icao24.startsWith(upperQuery)) score = 60;
+      else if (icao24.includes(upperQuery)) score = 50;
+      else if (aircraftType.includes(upperQuery)) score = 40;
 
-        return false;
-      })
-      .slice(0, 10); // Increased limit for better results
+      if (score > 0) {
+        const airline = getAirlineName(flight.callsign || '');
+        const parts: string[] = [];
+        if (flight.registration) parts.push(flight.registration);
+        if (flight.aircraftType) parts.push(flight.aircraftType);
+        parts.push(formatAlt(flight.altitude));
+        if (flight.velocity) parts.push(formatSpd(flight.velocity));
 
-    console.log('Matching flights found:', matchingFlights.length, matchingFlights.map(f => f.callsign));
-
-    for (const flight of matchingFlights) {
-      searchResults.push({
-        type: 'flight',
-        id: flight.icao24,
-        title: flight.callsign || flight.icao24,
-        subtitle: `${flight.icao24} • Alt: ${Math.round(flight.altitude || 0).toLocaleString()} ft`,
-        data: flight
-      });
+        searchResults.push({
+          type: 'flight',
+          id: flight.icao24,
+          title: flight.callsign || flight.icao24,
+          subtitle: parts.join(' · '),
+          secondaryInfo: airline || undefined,
+          data: flight,
+          score
+        });
+      }
     }
 
     // Search airports
     try {
-      const airportResults = await searchAirports(searchQuery, 5);
+      const airportResults = await searchAirports(searchQuery, 8);
       for (const result of airportResults) {
+        const apt = result.airport;
         searchResults.push({
           type: 'airport',
-          id: result.airport.iata,
-          title: `${result.airport.iata} - ${result.airport.name}`,
-          subtitle: `${result.airport.city}, ${result.airport.country}`,
-          data: result.airport
+          id: apt.icao || apt.iata,
+          title: `${apt.iata}/${apt.icao} - ${apt.name}`,
+          subtitle: `${apt.city}, ${apt.country}`,
+          data: apt,
+          score: result.score
         });
       }
     } catch (error) {
       console.error('Airport search error:', error);
     }
 
-    setResults(searchResults);
+    // Sort by score, flights first
+    searchResults.sort((a, b) => {
+      if (b.score !== a.score) return b.score - a.score;
+      if (a.type !== b.type) return a.type === 'flight' ? -1 : 1;
+      return 0;
+    });
+
+    setResults(searchResults.slice(0, 15));
     setIsLoading(false);
   }, [flights]);
 
@@ -231,7 +288,7 @@ export default function SearchBar({ onSelectAirport, onSelectFlight }: SearchBar
             onFocus={() => setIsFocused(true)}
             onBlur={() => setTimeout(() => setIsFocused(false), 200)}
             onKeyDown={handleKeyDown}
-            placeholder="Search flights or airports..."
+            placeholder="Search flights, airports, registrations..."
             className="flex-1 bg-transparent text-foreground placeholder-muted focus:outline-none"
           />
           {isLoading && (
@@ -276,11 +333,15 @@ export default function SearchBar({ onSelectAirport, onSelectFlight }: SearchBar
                 )}
               </div>
               <div className="flex-1 min-w-0">
-                <div className="font-medium text-foreground truncate">{result.title}</div>
+                <div className="flex items-center gap-2">
+                  <span className="font-medium text-foreground">{result.title}</span>
+                  {result.secondaryInfo && (
+                    <span className="text-xs text-secondary bg-surface-alt px-1.5 py-0.5 rounded">
+                      {result.secondaryInfo}
+                    </span>
+                  )}
+                </div>
                 <div className="text-sm text-secondary truncate">{result.subtitle}</div>
-              </div>
-              <div className="text-xs text-muted uppercase shrink-0">
-                {result.type}
               </div>
             </button>
           ))}
@@ -288,16 +349,33 @@ export default function SearchBar({ onSelectAirport, onSelectFlight }: SearchBar
       )}
 
       {/* Empty state */}
-      {isFocused && query.length > 1 && results.length === 0 && !isLoading && (
-        <div className="absolute top-full left-0 right-0 mt-2 bg-surface/95 backdrop-blur-sm rounded-xl border border-border shadow-xl p-4 text-center z-50">
-          <p className="text-secondary">No results found for &quot;{query}&quot;</p>
+      {isFocused && query.length >= 2 && results.length === 0 && !isLoading && (
+        <div className="absolute top-full left-0 right-0 mt-2 bg-surface/95 backdrop-blur-sm rounded-xl border border-border shadow-xl p-4 z-50">
+          <p className="text-secondary text-center">No results found for &quot;{query}&quot;</p>
+          <p className="text-xs text-muted text-center mt-1">
+            Try searching by callsign, registration, ICAO24, or airport code
+          </p>
         </div>
       )}
 
       {/* Loading state */}
-      {isFocused && query.length > 1 && isLoading && results.length === 0 && (
+      {isFocused && query.length >= 2 && isLoading && results.length === 0 && (
         <div className="absolute top-full left-0 right-0 mt-2 bg-surface/95 backdrop-blur-sm rounded-xl border border-border shadow-xl p-4 text-center z-50">
           <p className="text-secondary">Searching...</p>
+        </div>
+      )}
+
+      {/* Help hint when focused but no query */}
+      {isFocused && query.length < 2 && (
+        <div className="absolute top-full left-0 right-0 mt-2 bg-surface/95 backdrop-blur-sm rounded-xl border border-border shadow-xl p-4 z-50">
+          <p className="text-sm text-secondary">Search by:</p>
+          <ul className="text-xs text-muted mt-2 space-y-1">
+            <li>• <span className="text-foreground">Flight callsign</span> - BA123, UAL456, ASA789</li>
+            <li>• <span className="text-foreground">Registration</span> - N12345, G-ABCD</li>
+            <li>• <span className="text-foreground">Aircraft type</span> - B738, A320, B77W</li>
+            <li>• <span className="text-foreground">Airport code</span> - LHR, JFK, LAX (IATA or ICAO)</li>
+            <li>• <span className="text-foreground">City name</span> - London, New York</li>
+          </ul>
         </div>
       )}
     </div>

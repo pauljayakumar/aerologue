@@ -115,7 +115,8 @@
       "Bash(aws s3api create-bucket:*)",
       "Bash(aws acm list-certificates:*)",
       "Bash(aws logs filter-log-events:*)",
-      "Bash(powershell -Command:*)"
+      "Bash(powershell -Command:*)",
+      "Bash(git checkout:*)"
     ],
     "deny": [],
     "ask": []

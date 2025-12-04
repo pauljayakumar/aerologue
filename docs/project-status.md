@@ -1,6 +1,22 @@
 # Aerologue Project Status
 
-**Last Updated:** December 1, 2025
+**Last Updated:** December 4, 2025
+
+---
+
+## Recent Updates
+
+### December 4, 2025 - Enhanced Search Autocomplete
+- **Comprehensive Search**: SearchBar now searches across multiple flight fields:
+  - Callsign (with IATA to ICAO conversion, e.g., BA → BAW)
+  - Aircraft registration (e.g., N12345, G-ABCD)
+  - ICAO24 hex address
+  - Aircraft type (e.g., B738, A320)
+- **Airport Search**: Now shows both IATA and ICAO codes (e.g., "LHR/EGLL - Heathrow")
+- **Airline Names**: Displays airline name badge next to flight results (e.g., "British Airways")
+- **Richer Details**: Flight results show registration, aircraft type, altitude, and speed
+- **Help Hints**: Helpful prompts when search bar is focused
+- **Extended Airline Database**: 80+ airlines with IATA/ICAO mappings
 
 ---
 
