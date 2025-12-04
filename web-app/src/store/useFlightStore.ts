@@ -11,7 +11,7 @@ const getFlightsApiUrl = () => {
   }
   // Production: AWS API Gateway (no /api prefix)
   const awsApi = process.env.NEXT_PUBLIC_API_URL || 'https://mazzuw3qr6.execute-api.us-east-1.amazonaws.com/prod';
-  return `${awsApi}/flights`;
+  return `${awsApi}/flights?global=true`;
 };
 
 interface FlightStore {
@@ -55,7 +55,10 @@ export const useFlightStore = create<FlightStore>((set) => ({
         console.error('Response body:', text);
         throw new Error(`Failed to fetch flights: ${response.status}`);
       }
-      const data = await response.json();
+      const result = await response.json();
+
+      // Handle new response envelope format: { success, data: { flights }, meta }
+      const data = result.success ? result.data : result;
 
       const flightMap = new Map<string, FlightPosition>();
       data.flights?.forEach((flight: FlightPosition) => {

@@ -28,7 +28,7 @@ export default function MapPage() {
     // Set up polling for real-time updates
     const interval = setInterval(() => {
       fetchFlights();
-    }, 10000); // Update every 10 seconds
+    }, 10000); // Update every 10 seconds with real data
 
     return () => clearInterval(interval);
   }, [fetchFlights]);
@@ -90,7 +90,7 @@ export default function MapPage() {
       </div>
 
       {/* Stats bar */}
-      <div className="absolute bottom-4 left-1/2 -translate-x-1/2 z-10">
+      <div className="absolute bottom-12 left-1/2 -translate-x-1/2 z-10">
         <div className="bg-surface/90 backdrop-blur-sm rounded-full px-6 py-3 flex items-center space-x-6 shadow-xl border border-border">
           <div className="flex items-center space-x-2">
             <span className="w-2 h-2 bg-success rounded-full animate-pulse"></span>
@@ -106,6 +106,17 @@ export default function MapPage() {
           <div className="text-sm text-secondary">
             Updated: <span className="text-foreground">Just now</span>
           </div>
+        </div>
+      </div>
+
+      {/* Company footer */}
+      <div className="absolute bottom-2 left-0 right-0 z-10">
+        <div className="text-center text-xs text-secondary">
+          <span className="font-semibold text-foreground">Aerologue Ltd</span>
+          <span className="mx-2">·</span>
+          <span>71-75 Shelton Street, Covent Garden, London, WC2H 9JQ</span>
+          <span className="mx-2">·</span>
+          <span>Company No. 16876117</span>
         </div>
       </div>
 

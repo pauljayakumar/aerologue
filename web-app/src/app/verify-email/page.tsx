@@ -100,11 +100,11 @@ function VerifyEmailContent() {
         <div className="text-center mb-8">
           <Link href="/" className="inline-block">
             <Image
-              src="/aerologue.png"
+              src="/aerologue_logo.svg"
               alt="Aerologue"
-              width={260}
-              height={78}
-              className="h-[4.5rem] w-auto mx-auto"
+              width={220}
+              height={120}
+              className="h-16 w-auto mx-auto"
             />
           </Link>
         </div>

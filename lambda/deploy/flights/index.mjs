@@ -1,7 +1,7 @@
 // Aerologue Flights Lambda Function
 // Fetches global flight data from ADS-B Exchange API
 
-import { success, errors, corsResponse } from "../shared/response.mjs";
+import { success, errors, corsResponse } from './response.mjs';
 import { DynamoDBClient, UpdateItemCommand } from '@aws-sdk/client-dynamodb';
 
 const dynamodb = new DynamoDBClient({ region: 'us-east-1' });

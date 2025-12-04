@@ -502,3 +502,191 @@ Flight Data Flow:
 3. Wire up remaining DynamoDB tables (crossings, sessions, etc.)
 4. Implement crossing detection algorithm
 5. Real-time updates via WebSocket or polling
+
+---
+
+## Session Log - December 1, 2025 (BaaS Separation)
+
+### What Was Accomplished This Session
+
+**Phase 1: Backend-as-a-Service (BaaS) Separation**
+Implemented secure API architecture to support future mobile apps (iOS/Android).
+
+**JWT Authentication Added:**
+- Created Cognito JWT authorizer for API Gateway (ID: `7pliut`)
+- Protected routes now require valid Cognito ID token
+- Public routes (flights, health) remain open
+- Authentication uses `Bearer` token in `Authorization` header
+
+**Protected API Routes (Require JWT):**
+- `GET /users/{userId}` - Get user profile
+- `PUT /users/{userId}` - Update user profile
+- `GET /flights/{aircraft_id}/details` - Flight details (AeroDataBox)
+- `GET /trails/{aircraft_id}` - Flight trail data
+- `GET /admin/config` - Admin API controls
+- `PUT /admin/config` - Update admin settings
+
+**Public API Routes (No Auth Required):**
+- `GET /health` - Health check
+- `GET /flights` - Global flight positions
+- `OPTIONS /*` - CORS preflight
+
+**Standardized Response Envelope:**
+All Lambda functions now return consistent response format:
+```json
+{
+  "success": true,
+  "data": { /* response data */ },
+  "error": null,
+  "meta": { "timestamp": "2025-12-01T12:00:00Z" }
+}
+```
+
+**Lambda Functions Updated:**
+1. `aerologue-flights` - Uses standardized response
+2. `aerologue-user-profile` - Uses standardized response + JWT auth
+3. `aerologue-trail-get` - Uses standardized response + JWT auth
+4. `aerologue-flight-details` - Uses standardized response + JWT auth
+5. `aerologue-admin-config` - Uses standardized response + JWT auth
+
+**Shared Response Module:**
+Created `lambda/shared/response.mjs` with:
+- `success(data, meta)` - Standard success response
+- `errors.badRequest()`, `errors.notFound()`, etc.
+- `corsResponse()` - CORS preflight handler
+- `getRequestContext(event)` - Extract JWT claims, userId, etc.
+
+**Web App Updates:**
+- `src/services/api.ts` - Added auth token interceptor
+- `src/store/useAuthStore.ts` - Auth headers on profile API calls
+- `src/store/useFlightStore.ts` - Handles new response envelope
+
+**Deployment:**
+- All Lambda functions deployed with new response format
+- Web app rebuilt and deployed to S3
+- CloudFront cache invalidated
+
+### BaaS Architecture
+
+```
+Mobile Apps (Future)        Web App (Current)
+       |                          |
+       v                          v
+   ┌──────────────────────────────────────┐
+   │          API Gateway (/prod)          │
+   │  + JWT Authorizer (Cognito)           │
+   └──────────────────────────────────────┘
+                    |
+        ┌───────────┴───────────┐
+        v                       v
+  Protected Routes         Public Routes
+  (Require JWT)            (No Auth)
+        |                       |
+        v                       v
+  ┌─────────────┐         ┌─────────────┐
+  │ users/{id}  │         │  /flights   │
+  │ trails/{id} │         │  /health    │
+  │ admin/config│         └─────────────┘
+  │ flight-dets │
+  └─────────────┘
+        |
+        v
+  ┌─────────────────────────────────────┐
+  │           Cognito User Pool         │
+  │     (ID Token for Authorization)    │
+  └─────────────────────────────────────┘
+```
+
+### Files Created/Modified
+
+**New Files:**
+- `lambda/shared/response.mjs` - Standardized response utilities
+- `lambda/deploy/` - Deployment packages for all Lambdas
+
+**Modified Files:**
+- `lambda/flights/index.mjs` - Standardized responses
+- `lambda/user-profile/index.mjs` - Standardized responses
+- `lambda/trail-get/index.mjs` - Standardized responses
+- `lambda/flight-details/index.mjs` - Standardized responses
+- `lambda/admin-config/index.mjs` - Standardized responses
+- `web-app/src/services/api.ts` - Auth token interceptor
+- `web-app/src/store/useAuthStore.ts` - Auth headers
+- `web-app/src/store/useFlightStore.ts` - Response envelope handling
+
+### What's Left To Do (Phase 2+)
+1. Add API versioning (`/v1/flights` instead of `/flights`)
+2. Build mobile app with Flutter (iOS/Android)
+3. Implement WebSocket for real-time updates
+4. Add rate limiting
+
+---
+
+## Session Log - December 1, 2025 (Cost Monitoring)
+
+### What Was Accomplished This Session
+
+**Cost Monitoring Infrastructure:**
+1. **SNS Billing Alerts Topic**
+   - Created `aerologue-billing-alerts` SNS topic
+   - Subscribed user email for notifications
+   - Email confirmation pending
+
+2. **CloudWatch Billing Alarms**
+   - $10 threshold - Early warning
+   - $25 threshold - Budget alert
+   - $50 threshold - Critical spending alert
+   - All alarms send to SNS topic
+
+3. **API Usage Tracking (DynamoDB)**
+   - Created `aerologue-api-usage` table
+   - Schema: `api_name` (PK), `date` (SK)
+   - Tracks: total_calls, successful_calls, error_calls
+
+**Lambda Functions Updated for Tracking:**
+1. **aerologue-flights** (`lambda/flights/index.mjs`)
+   - Tracks ADS-B Exchange API calls
+   - Counts by regions queried (8 for global)
+   - Also tracks OpenSky fallback usage
+
+2. **aerologue-flight-details** (`lambda/flight-details/index.mjs`)
+   - Tracks AeroDataBox API calls
+   - Tracks success/error separately
+   - Fixed endpoint URL: `/flights/Icao24/{icao24}`
+
+**AeroDataBox Integration Fixed:**
+- Updated SSM parameter with valid API.Market key
+- Fixed endpoint URL from `/flights/search/Icao24/` to `/flights/Icao24/`
+- Verified working with live flight data
+
+### Monthly Cost Estimate
+
+| Service | Cost/Month |
+|---------|------------|
+| AWS Lambda | ~$0.50 |
+| DynamoDB | ~$0.50 |
+| API Gateway | ~$0.50 |
+| S3 | ~$0.10 |
+| CloudFront | ~$0.50 |
+| Route53 | ~$1.00 |
+| **AWS Subtotal** | **~$3** |
+| ADS-B Exchange (RapidAPI) | $10 |
+| AeroDataBox (API.Market) | $15 |
+| **Total** | **~$28/month** |
+
+### API Usage Summary (2025-12-01)
+
+| API | Total Calls | Successful | Errors |
+|-----|-------------|------------|--------|
+| ADS-B Exchange | 146 | 146 | 0 |
+| AeroDataBox | 1 | 1 | 0 |
+
+### Files Modified
+
+- `lambda/flights/index.mjs` - Added DynamoDB usage tracking
+- `lambda/flight-details/index.mjs` - Fixed endpoint URL, added tracking
+
+### What's Left To Do
+1. Confirm SNS email subscription for billing alerts
+2. Build admin dashboard to view usage stats
+3. Add daily/weekly usage reports
+4. Set up usage quotas per user

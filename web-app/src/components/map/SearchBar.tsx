@@ -19,6 +19,76 @@ interface SearchBarProps {
   onSelectFlight?: (flight: FlightPosition) => void;
 }
 
+// Common IATA to ICAO airline code mappings for search - moved outside component
+const AIRLINE_CODE_MAP: Record<string, string[]> = {
+    'BA': ['BAW'],           // British Airways
+    'AA': ['AAL'],           // American Airlines
+    'UA': ['UAL'],           // United Airlines
+    'DL': ['DAL'],           // Delta
+    'AF': ['AFR'],           // Air France
+    'LH': ['DLH'],           // Lufthansa
+    'EK': ['UAE'],           // Emirates
+    'QF': ['QFA'],           // Qantas
+    'SQ': ['SIA'],           // Singapore Airlines
+    'CX': ['CPA'],           // Cathay Pacific
+    'NH': ['ANA'],           // All Nippon Airways
+    'JL': ['JAL'],           // Japan Airlines
+    'KL': ['KLM'],           // KLM
+    'VS': ['VIR'],           // Virgin Atlantic
+    'EY': ['ETD'],           // Etihad
+    'QR': ['QTR'],           // Qatar Airways
+    'TK': ['THY'],           // Turkish Airlines
+    'IB': ['IBE'],           // Iberia
+    'AY': ['FIN'],           // Finnair
+    'SK': ['SAS'],           // SAS
+    'LX': ['SWR'],           // Swiss
+    'OS': ['AUA'],           // Austrian
+    'SN': ['BEL'],           // Brussels Airlines
+    'TP': ['TAP'],           // TAP Portugal
+    'AZ': ['ITY', 'AZA'],    // ITA Airways (former Alitalia)
+    'EI': ['EIN'],           // Aer Lingus
+    'U2': ['EZY'],           // easyJet
+    'FR': ['RYR'],           // Ryanair
+    'W6': ['WZZ'],           // Wizz Air
+    'VY': ['VLG'],           // Vueling
+    'AC': ['ACA'],           // Air Canada
+    'WN': ['SWA'],           // Southwest
+    'B6': ['JBU'],           // JetBlue
+    'AS': ['ASA'],           // Alaska Airlines
+    'NK': ['NKS'],           // Spirit Airlines
+    'F9': ['FFT'],           // Frontier
+    'WS': ['WJA'],           // WestJet
+    'LA': ['LAN'],           // LATAM
+    'AM': ['AMX'],           // Aeromexico
+    'AV': ['AVA'],           // Avianca
+    'CM': ['CMP'],           // Copa Airlines
+    'CA': ['CCA'],           // Air China
+    'MU': ['CES'],           // China Eastern
+    'CZ': ['CSN'],           // China Southern
+    'HU': ['CHH'],           // Hainan Airlines
+    'KE': ['KAL'],           // Korean Air
+    'OZ': ['AAR'],           // Asiana
+    'TG': ['THA'],           // Thai Airways
+    'MH': ['MAS'],           // Malaysia Airlines
+    'GA': ['GIA'],           // Garuda Indonesia
+    'PR': ['PAL'],           // Philippine Airlines
+    'CI': ['CAL'],           // China Airlines
+    'BR': ['EVA'],           // EVA Air
+    'VN': ['HVN'],           // Vietnam Airlines
+    'AI': ['AIC'],           // Air India
+    'ET': ['ETH'],           // Ethiopian Airlines
+    'SA': ['SAA'],           // South African Airways
+    'MS': ['MSR'],           // EgyptAir
+    'RJ': ['RJA'],           // Royal Jordanian
+    'GF': ['GFA'],           // Gulf Air
+    'WY': ['OMA'],           // Oman Air
+    'SV': ['SVA'],           // Saudi Arabian Airlines
+    'NZ': ['ANZ'],           // Air New Zealand
+    'FJ': ['FJI'],           // Fiji Airways
+    'JQ': ['JST'],           // Jetstar
+  'VA': ['VOZ'],           // Virgin Australia
+};
+
 export default function SearchBar({ onSelectAirport, onSelectFlight }: SearchBarProps) {
   const [query, setQuery] = useState('');
   const [isFocused, setIsFocused] = useState(false);
@@ -29,6 +99,8 @@ export default function SearchBar({ onSelectAirport, onSelectFlight }: SearchBar
 
   // Search function with debounce
   const performSearch = useCallback(async (searchQuery: string) => {
+    // Debug logging
+    console.log('Search query:', searchQuery, 'Flights in store:', flights.size);
     if (searchQuery.length < 2) {
       setResults([]);
       return;
@@ -38,14 +110,41 @@ export default function SearchBar({ onSelectAirport, onSelectFlight }: SearchBar
     const searchResults: SearchResult[] = [];
     const upperQuery = searchQuery.toUpperCase();
 
+    // Check if query matches an IATA code and get ICAO equivalents
+    const icaoVariants: string[] = [];
+    for (const [iata, icaoList] of Object.entries(AIRLINE_CODE_MAP)) {
+      if (upperQuery.startsWith(iata)) {
+        // If searching "BA123", try "BAW123" too
+        const flightNum = upperQuery.slice(iata.length);
+        icaoList.forEach(icao => icaoVariants.push(icao + flightNum));
+      }
+    }
+    console.log('ICAO variants for', upperQuery, ':', icaoVariants);
+
     // Search flights by callsign or ICAO24
     const flightArray = Array.from(flights.values());
     const matchingFlights = flightArray
-      .filter(f =>
-        f.callsign?.toUpperCase().includes(upperQuery) ||
-        f.icao24?.toUpperCase().includes(upperQuery)
-      )
-      .slice(0, 5); // Limit flight results
+      .filter(f => {
+        const callsign = f.callsign?.toUpperCase() || '';
+        const icao24 = f.icao24?.toUpperCase() || '';
+
+        // Direct match
+        if (callsign.includes(upperQuery) || icao24.includes(upperQuery)) {
+          return true;
+        }
+
+        // IATA to ICAO match (e.g., "BA" finds "BAW")
+        for (const variant of icaoVariants) {
+          if (callsign.startsWith(variant) || (variant && callsign.includes(variant))) {
+            return true;
+          }
+        }
+
+        return false;
+      })
+      .slice(0, 10); // Increased limit for better results
+
+    console.log('Matching flights found:', matchingFlights.length, matchingFlights.map(f => f.callsign));
 
     for (const flight of matchingFlights) {
       searchResults.push({

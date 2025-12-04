@@ -2,7 +2,7 @@
 // Handles user profile CRUD operations with DynamoDB
 // Also serves as Cognito Post Confirmation trigger
 
-import { success, errors, corsResponse, getRequestContext } from '../shared/response.mjs';
+import { success, errors, corsResponse, getRequestContext } from './response.mjs';
 import { DynamoDBClient } from '@aws-sdk/client-dynamodb';
 import { DynamoDBDocumentClient, GetCommand, PutCommand, UpdateCommand, DeleteCommand } from '@aws-sdk/lib-dynamodb';
 

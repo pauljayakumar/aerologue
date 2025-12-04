@@ -2,7 +2,7 @@
 // Fetches flight route information (origin/destination) from AeroDataBox API
 // Uses API.Market endpoint (not RapidAPI)
 
-import { success, errors, corsResponse } from '../shared/response.mjs';
+import { success, errors, corsResponse } from './response.mjs';
 import { DynamoDBClient, GetItemCommand, UpdateItemCommand } from '@aws-sdk/client-dynamodb';
 import { SSMClient, GetParameterCommand } from '@aws-sdk/client-ssm';
 import { unmarshall } from '@aws-sdk/util-dynamodb';

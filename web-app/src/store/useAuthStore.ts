@@ -8,15 +8,34 @@ import awsConfig from '@/lib/aws-config';
 // Always use AWS API Gateway (static export doesn't have local API routes)
 const USERS_API_URL = `${awsConfig.api.baseUrl}/users`;
 
+// Helper to get auth headers
+async function getAuthHeaders(): Promise<HeadersInit> {
+  try {
+    const session = await fetchAuthSession();
+    if (session.tokens?.idToken) {
+      return {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${session.tokens.idToken.toString()}`,
+      };
+    }
+  } catch (error) {
+    console.debug('No auth session for headers');
+  }
+  return { 'Content-Type': 'application/json' };
+}
+
 // Fetch user profile from DynamoDB
 async function fetchUserProfile(userId: string): Promise<User | null> {
   try {
-    const response = await fetch(`${USERS_API_URL}/${userId}`);
+    const headers = await getAuthHeaders();
+    const response = await fetch(`${USERS_API_URL}/${userId}`, { headers });
     if (!response.ok) {
       if (response.status === 404) return null;
       throw new Error('Failed to fetch profile');
     }
-    const profile = await response.json();
+    const result = await response.json();
+    // Handle new response envelope format
+    const profile = result.success ? result.data : result;
     return {
       id: profile.user_id,
       email: profile.email,
@@ -173,9 +192,10 @@ export const useAuthStore = create<AuthStore>()(
         if (!user) return false;
 
         try {
+          const headers = await getAuthHeaders();
           const response = await fetch(`${USERS_API_URL}/${user.id}`, {
             method: 'PUT',
-            headers: { 'Content-Type': 'application/json' },
+            headers,
             body: JSON.stringify({
               display_name: updates.displayName,
               avatar_url: updates.avatarUrl,
@@ -187,7 +207,9 @@ export const useAuthStore = create<AuthStore>()(
             throw new Error('Failed to update profile');
           }
 
-          const updatedProfile = await response.json();
+          const result = await response.json();
+          // Handle new response envelope format
+          const updatedProfile = result.success ? result.data : result;
           set({
             user: {
               ...user,

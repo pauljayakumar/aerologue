@@ -1,7 +1,7 @@
 // Aerologue Trail Get Lambda
 // Retrieves flight trail data from S3 for visualization
 
-import { success, errors, corsResponse } from '../shared/response.mjs';
+import { success, errors, corsResponse } from './response.mjs';
 import { S3Client, GetObjectCommand } from '@aws-sdk/client-s3';
 import { DynamoDBClient, QueryCommand } from '@aws-sdk/client-dynamodb';
 import { unmarshall } from '@aws-sdk/util-dynamodb';

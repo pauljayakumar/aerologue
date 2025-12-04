@@ -1,5 +1,6 @@
 // API Service - handles all backend communication
 import axios from 'axios';
+import { fetchAuthSession } from 'aws-amplify/auth';
 import awsConfig from '@/lib/aws-config';
 
 const api = axios.create({
@@ -12,11 +13,15 @@ const api = axios.create({
 // Request interceptor to add auth token
 api.interceptors.request.use(
   async (config) => {
-    // TODO: Add Cognito token to requests
-    // const session = await fetchAuthSession();
-    // if (session.tokens?.idToken) {
-    //   config.headers.Authorization = `Bearer ${session.tokens.idToken}`;
-    // }
+    try {
+      const session = await fetchAuthSession();
+      if (session.tokens?.idToken) {
+        config.headers.Authorization = `Bearer ${session.tokens.idToken.toString()}`;
+      }
+    } catch (error) {
+      // User not authenticated - continue without token
+      console.debug('No auth session available');
+    }
     return config;
   },
   (error) => Promise.reject(error)
@@ -36,27 +41,42 @@ api.interceptors.response.use(
 
 export default api;
 
+// Type for API responses with standardized envelope
+export interface ApiResponse<T> {
+  success: boolean;
+  data: T;
+  error: { code: string; message: string; details?: unknown } | null;
+  meta: { timestamp: string; [key: string]: unknown };
+}
+
+// Helper to extract data from response envelope
+export async function unwrapResponse<T>(promise: Promise<{ data: ApiResponse<T> }>): Promise<T> {
+  const response = await promise;
+  if (!response.data.success) {
+    throw new Error(response.data.error?.message || 'Unknown error');
+  }
+  return response.data.data;
+}
+
 // API endpoints
 export const endpoints = {
   // Health
   health: () => api.get('/health'),
 
-  // Flights
-  searchFlights: (query: string) => api.get(`/flights/search?q=${query}`),
-  getFlight: (flightId: string) => api.get(`/flights/${flightId}`),
-  getFlightPositions: (bounds: { north: number; south: number; east: number; west: number }) =>
-    api.get('/flights/positions', { params: bounds }),
+  // Flights - Public endpoints
+  getFlights: (params?: { global?: boolean; lat?: number; lon?: number; dist?: number }) =>
+    api.get('/flights', { params }),
+  getFlightDetails: (aircraftId: string) => api.get(`/flights/${aircraftId}/details`),
 
-  // User's tracked flights
-  getTrackedFlights: () => api.get('/user/flights'),
-  trackFlight: (flightId: string) => api.post(`/user/flights/${flightId}`),
-  untrackFlight: (flightId: string) => api.delete(`/user/flights/${flightId}`),
+  // Flight trails
+  getTrail: (aircraftId: string, hours?: number) =>
+    api.get(`/trails/${aircraftId}`, { params: { hours } }),
 
-  // User profile
-  getProfile: () => api.get('/user/profile'),
-  updateProfile: (data: Record<string, unknown>) => api.put('/user/profile', data),
+  // User profile - Protected endpoints
+  getProfile: (userId: string) => api.get(`/users/${userId}`),
+  updateProfile: (userId: string, data: Record<string, unknown>) => api.put(`/users/${userId}`, data),
 
-  // Crossings
-  getCrossings: () => api.get('/user/crossings'),
-  getCrossing: (crossingId: string) => api.get(`/crossings/${crossingId}`),
+  // Admin config - Protected endpoints
+  getAdminConfig: () => api.get('/admin/config'),
+  updateAdminConfig: (data: Record<string, boolean>) => api.put('/admin/config', data),
 };

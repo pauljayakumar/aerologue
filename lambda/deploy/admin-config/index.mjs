@@ -1,7 +1,7 @@
 // Aerologue Admin Config Lambda
 // Manages API controls and kill switches
 
-import { success, errors, corsResponse } from '../shared/response.mjs';
+import { success, errors, corsResponse } from './response.mjs';
 import { DynamoDBClient, GetItemCommand, UpdateItemCommand } from '@aws-sdk/client-dynamodb';
 import { unmarshall, marshall } from '@aws-sdk/util-dynamodb';
 

@@ -28,13 +28,21 @@ interface TrailPoint {
   ts: string;
 }
 
-const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL || 'https://api.aerologue.com/prod';
+const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'https://mazzuw3qr6.execute-api.us-east-1.amazonaws.com/prod';
 
-// Convert knots to degrees per second
-// 1 knot = 1.852 km/h = 0.0005144 km/s
-// 1 degree latitude ≈ 111 km
-// So: knots * 0.0005144 / 111 = degrees/second
-const KNOTS_TO_DEG_PER_SEC = 0.0005144 / 111;
+// Major airport codes for low zoom visibility - defined outside component to prevent recreation
+const MAJOR_AIRPORT_CODES = new Set([
+  'JFK', 'LAX', 'ORD', 'DFW', 'DEN', 'ATL', 'SFO', 'SEA', 'MIA', 'BOS',
+  'IAH', 'EWR', 'LAS', 'PHX', 'MSP', 'DTW', 'CLT', 'MCO', 'PHL', 'DCA',
+  'YYZ', 'YVR', 'YUL', 'YYC', 'MEX', 'CUN',
+  'LHR', 'CDG', 'FRA', 'AMS', 'MAD', 'BCN', 'FCO', 'MUC', 'ZRH', 'VIE',
+  'LGW', 'MAN', 'DUB', 'CPH', 'OSL', 'ARN', 'HEL', 'BRU', 'LIS', 'ATH',
+  'HND', 'NRT', 'PEK', 'PVG', 'HKG', 'SIN', 'ICN', 'BKK', 'KUL', 'CGK',
+  'DEL', 'BOM', 'DXB', 'DOH', 'IST', 'TLV',
+  'SYD', 'MEL', 'BNE', 'PER', 'AKL',
+  'GRU', 'GIG', 'EZE', 'SCL', 'LIM', 'BOG',
+  'JNB', 'CAI', 'CPT', 'NBO', 'ADD', 'CMN'
+]);
 
 const FlightMap = forwardRef<FlightMapRef, FlightMapProps>(function FlightMap(
   { className = '', onFlightClick },
@@ -45,28 +53,11 @@ const FlightMap = forwardRef<FlightMapRef, FlightMapProps>(function FlightMap(
   const [mapLoaded, setMapLoaded] = useState(false);
   const flightsRef = useRef<Map<string, FlightPosition>>(new Map());
   const airportsRef = useRef<Airport[]>([]);
+  const airportsLoadedRef = useRef(false);
   const currentTrailRef = useRef<string | null>(null);
-
-  // For interpolation
-  const positionsRef = useRef<Map<string, { lat: number; lon: number }>>(new Map());
-  const animationRef = useRef<number | null>(null);
-  const lastUpdateRef = useRef<number>(performance.now());
 
   const { flights } = useFlightStore();
 
-  // Major airport codes for low zoom visibility
-  const MAJOR_AIRPORT_CODES = new Set([
-    'JFK', 'LAX', 'ORD', 'DFW', 'DEN', 'ATL', 'SFO', 'SEA', 'MIA', 'BOS',
-    'IAH', 'EWR', 'LAS', 'PHX', 'MSP', 'DTW', 'CLT', 'MCO', 'PHL', 'DCA',
-    'YYZ', 'YVR', 'YUL', 'YYC', 'MEX', 'CUN',
-    'LHR', 'CDG', 'FRA', 'AMS', 'MAD', 'BCN', 'FCO', 'MUC', 'ZRH', 'VIE',
-    'LGW', 'MAN', 'DUB', 'CPH', 'OSL', 'ARN', 'HEL', 'BRU', 'LIS', 'ATH',
-    'HND', 'NRT', 'PEK', 'PVG', 'HKG', 'SIN', 'ICN', 'BKK', 'KUL', 'CGK',
-    'DEL', 'BOM', 'DXB', 'DOH', 'IST', 'TLV',
-    'SYD', 'MEL', 'BNE', 'PER', 'AKL',
-    'GRU', 'GIG', 'EZE', 'SCL', 'LIM', 'BOG',
-    'JNB', 'CAI', 'CPT', 'NBO', 'ADD', 'CMN'
-  ]);
 
   // Helper function to clear trail from map
   const clearTrail = useCallback(() => {
@@ -231,6 +222,10 @@ const FlightMap = forwardRef<FlightMapRef, FlightMapProps>(function FlightMap(
 
   // Load and add airport layers
   const loadAirportLayers = useCallback(async (mapInstance: maplibregl.Map) => {
+    // Guard: only load airports once
+    if (airportsLoadedRef.current) return;
+    airportsLoadedRef.current = true;
+
     try {
       const airports = await loadAirports();
       airportsRef.current = airports;
@@ -398,7 +393,7 @@ const FlightMap = forwardRef<FlightMapRef, FlightMapProps>(function FlightMap(
     } catch (error) {
       console.error('Error loading airports:', error);
     }
-  }, [MAJOR_AIRPORT_CODES]);
+  }, []);
 
   // Initialize map
   useEffect(() => {
@@ -470,124 +465,43 @@ const FlightMap = forwardRef<FlightMapRef, FlightMapProps>(function FlightMap(
     });
 
     return () => {
-      if (animationRef.current) {
-        cancelAnimationFrame(animationRef.current);
-      }
       map.current?.remove();
       map.current = null;
     };
   }, [loadAircraftIcons, loadAirportLayers, onFlightClick]);
 
-  // When flights update from API, reset base positions
-  useEffect(() => {
-    flights.forEach((flight, icao24) => {
-      // Initialize or update position tracking
-      if (!positionsRef.current.has(icao24)) {
-        positionsRef.current.set(icao24, {
-          lat: flight.latitude,
-          lon: flight.longitude,
-        });
-      }
-      // Note: We don't reset existing positions here to allow smooth interpolation
-    });
-
-    // Remove stale entries
-    positionsRef.current.forEach((_, icao24) => {
-      if (!flights.has(icao24)) {
-        positionsRef.current.delete(icao24);
-      }
-    });
-
-    lastUpdateRef.current = performance.now();
-  }, [flights]);
-
-  // Animation loop for smooth movement
+  // Update map when flights data changes - show real positions directly
   useEffect(() => {
     if (!map.current || !mapLoaded) return;
 
-    let lastFrameTime = performance.now();
+    const features: GeoJSON.Feature[] = [];
 
-    const animate = () => {
-      const now = performance.now();
-      const deltaSeconds = (now - lastFrameTime) / 1000;
-      lastFrameTime = now;
-
-      // Cap delta to avoid huge jumps if tab was inactive
-      const cappedDelta = Math.min(deltaSeconds, 0.1);
-
-      // Build GeoJSON features with interpolated positions
-      const features: GeoJSON.Feature[] = [];
-
-      flightsRef.current.forEach((flight, icao24) => {
-        let pos = positionsRef.current.get(icao24);
-
-        if (!pos) {
-          pos = { lat: flight.latitude, lon: flight.longitude };
-          positionsRef.current.set(icao24, pos);
-        }
-
-        // Only interpolate if aircraft is moving (speed > 30 knots and has heading)
-        if (flight.velocity && flight.velocity > 30 && flight.heading !== null) {
-          const heading = flight.heading;
-          const speed = flight.velocity;
-
-          // Calculate movement based on actual elapsed time
-          const headingRad = (heading * Math.PI) / 180;
-          const distanceDeg = speed * KNOTS_TO_DEG_PER_SEC * cappedDelta;
-
-          // Move in heading direction
-          pos.lat += distanceDeg * Math.cos(headingRad);
-          pos.lon += (distanceDeg * Math.sin(headingRad)) / Math.max(0.1, Math.cos((pos.lat * Math.PI) / 180));
-
-          // Gradually correct towards actual position (scaled by delta time)
-          // ~3% correction per frame at 60fps = ~180% per second
-          const correctionFactor = Math.min(1, 3 * cappedDelta);
-          pos.lat += (flight.latitude - pos.lat) * correctionFactor;
-          pos.lon += (flight.longitude - pos.lon) * correctionFactor;
-        } else {
-          // Stationary or slow - lerp to actual position faster
-          const lerpFactor = Math.min(1, 6 * cappedDelta);
-          pos.lat += (flight.latitude - pos.lat) * lerpFactor;
-          pos.lon += (flight.longitude - pos.lon) * lerpFactor;
-        }
-
-        features.push({
-          type: 'Feature',
-          geometry: {
-            type: 'Point',
-            coordinates: [pos.lon, pos.lat],
-          },
-          properties: {
-            icao24: flight.icao24,
-            callsign: flight.callsign,
-            icon: getAircraftIconName(flight.aircraftType),
-            heading: flight.heading ?? 0,
-            altitude: flight.altitude,
-            velocity: flight.velocity,
-          },
-        });
+    flights.forEach((flight) => {
+      features.push({
+        type: 'Feature',
+        geometry: {
+          type: 'Point',
+          coordinates: [flight.longitude, flight.latitude],
+        },
+        properties: {
+          icao24: flight.icao24,
+          callsign: flight.callsign,
+          icon: getAircraftIconName(flight.aircraftType),
+          heading: flight.heading ?? 0,
+          altitude: flight.altitude,
+          velocity: flight.velocity,
+        },
       });
+    });
 
-      // Update map source
-      const source = map.current?.getSource('flights') as maplibregl.GeoJSONSource;
-      if (source) {
-        source.setData({
-          type: 'FeatureCollection',
-          features,
-        });
-      }
-
-      animationRef.current = requestAnimationFrame(animate);
-    };
-
-    animationRef.current = requestAnimationFrame(animate);
-
-    return () => {
-      if (animationRef.current) {
-        cancelAnimationFrame(animationRef.current);
-      }
-    };
-  }, [mapLoaded]);
+    const source = map.current?.getSource('flights') as maplibregl.GeoJSONSource;
+    if (source) {
+      source.setData({
+        type: 'FeatureCollection',
+        features,
+      });
+    }
+  }, [flights, mapLoaded]);
 
   return (
     <div className={`relative w-full h-full ${className}`} style={{ minHeight: '100%' }}>

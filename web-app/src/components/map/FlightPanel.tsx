@@ -47,7 +47,7 @@ interface FlightPanelProps {
   onClose: () => void;
 }
 
-const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL || 'https://api.aerologue.com/prod';
+const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'https://mazzuw3qr6.execute-api.us-east-1.amazonaws.com/prod';
 
 export default function FlightPanel({ flight, isOpen, onClose }: FlightPanelProps) {
   const [isAnimating, setIsAnimating] = useState(false);

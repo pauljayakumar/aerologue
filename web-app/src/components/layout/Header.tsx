@@ -2,12 +2,9 @@
 
 import Link from 'next/link';
 import Image from 'next/image';
-import { useAuthStore } from '@/store/useAuthStore';
 import { ThemeToggleCompact } from '@/components/ui/ThemeToggle';
 
 export default function Header() {
-  const { isAuthenticated, user, logout } = useAuthStore();
-
   return (
     <header className="bg-surface border-b border-border shadow-sm">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -15,11 +12,11 @@ export default function Header() {
           {/* Logo */}
           <Link href="/" className="flex items-center">
             <Image
-              src="/aerologue.png"
+              src="/aerologue_name.png"
               alt="Aerologue"
-              width={260}
-              height={78}
-              className="h-[4.5rem] w-auto"
+              width={180}
+              height={40}
+              className="h-8 w-auto"
               priority
             />
           </Link>
@@ -32,62 +29,60 @@ export default function Header() {
             >
               Live Map
             </Link>
-            <Link
-              href="/flights"
-              className="text-foreground-secondary hover:text-map transition"
+            <span
+              className="text-foreground-secondary/50 cursor-not-allowed flex items-center gap-1"
+              title="Coming soon"
             >
               Flights
-            </Link>
-            {isAuthenticated && (
-              <>
-                <Link
-                  href="/crossings"
-                  className="text-foreground-secondary hover:text-crossing transition"
-                >
-                  Crossings
-                </Link>
-                <Link
-                  href="/wallet"
-                  className="text-foreground-secondary hover:text-wallet transition"
-                >
-                  Wallet
-                </Link>
-              </>
-            )}
+              <svg className="w-3 h-3" fill="currentColor" viewBox="0 0 20 20">
+                <path fillRule="evenodd" d="M5 9V7a5 5 0 0110 0v2a2 2 0 012 2v5a2 2 0 01-2 2H5a2 2 0 01-2-2v-5a2 2 0 012-2zm8-2v2H7V7a3 3 0 016 0z" clipRule="evenodd" />
+              </svg>
+            </span>
+            <span
+              className="text-foreground-secondary/50 cursor-not-allowed flex items-center gap-1"
+              title="Coming soon"
+            >
+              Crossings
+              <svg className="w-3 h-3" fill="currentColor" viewBox="0 0 20 20">
+                <path fillRule="evenodd" d="M5 9V7a5 5 0 0110 0v2a2 2 0 012 2v5a2 2 0 01-2 2H5a2 2 0 01-2-2v-5a2 2 0 012-2zm8-2v2H7V7a3 3 0 016 0z" clipRule="evenodd" />
+              </svg>
+            </span>
+            <span
+              className="text-foreground-secondary/50 cursor-not-allowed flex items-center gap-1"
+              title="Coming soon"
+            >
+              Wallet
+              <svg className="w-3 h-3" fill="currentColor" viewBox="0 0 20 20">
+                <path fillRule="evenodd" d="M5 9V7a5 5 0 0110 0v2a2 2 0 012 2v5a2 2 0 01-2 2H5a2 2 0 01-2-2v-5a2 2 0 012-2zm8-2v2H7V7a3 3 0 016 0z" clipRule="evenodd" />
+              </svg>
+            </span>
           </nav>
 
-          {/* Right side: Theme toggle + Auth */}
+          {/* Right side: Theme toggle + Auth (temporarily disabled) */}
           <div className="flex items-center space-x-4">
             <ThemeToggleCompact />
 
-            {isAuthenticated ? (
-              <div className="flex items-center space-x-4">
-                <span className="text-sm text-secondary">
-                  {user?.displayName || user?.email}
-                </span>
-                <button
-                  onClick={() => logout()}
-                  className="btn-secondary text-sm px-4 py-2"
-                >
-                  Logout
-                </button>
-              </div>
-            ) : (
-              <div className="flex items-center space-x-2">
-                <Link
-                  href="/login"
-                  className="text-sm text-secondary hover:text-foreground transition"
-                >
-                  Login
-                </Link>
-                <Link
-                  href="/register"
-                  className="btn-map text-sm px-4 py-2"
-                >
-                  Sign Up
-                </Link>
-              </div>
-            )}
+            {/* Auth buttons temporarily disabled */}
+            <div className="flex items-center space-x-2">
+              <span
+                className="text-sm text-foreground-secondary/50 cursor-not-allowed flex items-center gap-1"
+                title="Coming soon"
+              >
+                Login
+                <svg className="w-3 h-3" fill="currentColor" viewBox="0 0 20 20">
+                  <path fillRule="evenodd" d="M5 9V7a5 5 0 0110 0v2a2 2 0 012 2v5a2 2 0 01-2 2H5a2 2 0 01-2-2v-5a2 2 0 012-2zm8-2v2H7V7a3 3 0 016 0z" clipRule="evenodd" />
+                </svg>
+              </span>
+              <span
+                className="text-sm text-foreground-secondary/50 cursor-not-allowed flex items-center gap-1 px-4 py-2 rounded-lg border border-border/50"
+                title="Coming soon"
+              >
+                Sign Up
+                <svg className="w-3 h-3" fill="currentColor" viewBox="0 0 20 20">
+                  <path fillRule="evenodd" d="M5 9V7a5 5 0 0110 0v2a2 2 0 012 2v5a2 2 0 01-2 2H5a2 2 0 01-2-2v-5a2 2 0 012-2zm8-2v2H7V7a3 3 0 016 0z" clipRule="evenodd" />
+                </svg>
+              </span>
+            </div>
           </div>
         </div>
       </div>
