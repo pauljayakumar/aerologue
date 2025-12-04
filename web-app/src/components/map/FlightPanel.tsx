@@ -97,20 +97,11 @@ export default function FlightPanel({ flight, isOpen, onClose }: FlightPanelProp
 
   return (
     <>
-      {/* Backdrop */}
-      <div
-        className={`
-          fixed inset-0 bg-black/50 backdrop-blur-sm z-30 transition-opacity duration-300
-          ${isOpen ? 'opacity-100' : 'opacity-0 pointer-events-none'}
-        `}
-        onClick={onClose}
-      />
-
-      {/* Panel */}
+      {/* Panel - slides in from right, no backdrop overlay */}
       <div
         className={`
           fixed right-0 top-16 bottom-0 w-full max-w-md bg-surface border-l border-border z-40
-          transform transition-transform duration-300 ease-out overflow-y-auto
+          transform transition-transform duration-300 ease-out overflow-y-auto shadow-2xl
           ${isOpen ? 'translate-x-0' : 'translate-x-full'}
         `}
         onTransitionEnd={() => !isOpen && setIsAnimating(false)}
