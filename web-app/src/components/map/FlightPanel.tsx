@@ -253,22 +253,18 @@ export default function FlightPanel({ flight, isOpen, onClose }: FlightPanelProp
                 <StatCard
                   label="Altitude"
                   value={flight.altitude ? `${Math.round(flight.altitude).toLocaleString()} ft` : 'N/A'}
-                  icon="📈"
                 />
                 <StatCard
                   label="Speed"
                   value={flight.velocity ? `${Math.round(flight.velocity)} kts` : 'N/A'}
-                  icon="💨"
                 />
                 <StatCard
                   label="Heading"
                   value={flight.heading ? `${Math.round(flight.heading)}°` : 'N/A'}
-                  icon="🧭"
                 />
                 <StatCard
                   label="Vertical Rate"
                   value={flight.verticalRate ? `${Math.round(flight.verticalRate)} ft/m` : 'N/A'}
-                  icon={flight.verticalRate && flight.verticalRate > 0 ? '⬆️' : '⬇️'}
                 />
               </div>
 
@@ -306,16 +302,11 @@ export default function FlightPanel({ flight, isOpen, onClose }: FlightPanelProp
 
               {/* Transponder & Status */}
               <div className="bg-gradient-to-br from-surface-alt to-surface-alt/50 rounded-xl p-4 border border-border">
-                <div className="flex items-center space-x-3 mb-3">
-                  <div className="w-10 h-10 bg-map/10 rounded-lg flex items-center justify-center">
-                    <span className="text-xl">📡</span>
-                  </div>
-                  <div>
-                    <h3 className="font-medium text-foreground">Transponder Data</h3>
-                    <p className="text-xs text-muted">
-                      via {flight.source === 'adsb-exchange' ? 'ADS-B Exchange' : flight.source === 'opensky' ? 'OpenSky Network' : 'Unknown source'}
-                    </p>
-                  </div>
+                <div className="mb-3">
+                  <h3 className="font-medium text-foreground">Transponder Data</h3>
+                  <p className="text-xs text-muted">
+                    via {flight.source === 'adsb-exchange' ? 'ADS-B Exchange' : flight.source === 'opensky' ? 'OpenSky Network' : 'Unknown source'}
+                  </p>
                 </div>
                 <div className="space-y-2 text-sm">
                   <div className="flex justify-between">
@@ -346,8 +337,7 @@ export default function FlightPanel({ flight, isOpen, onClose }: FlightPanelProp
               {/* Emergency status (if any) */}
               {flight.emergency && (
                 <div className="bg-danger/10 border border-danger/30 rounded-xl p-4">
-                  <div className="flex items-center space-x-2 text-danger">
-                    <span className="text-xl">⚠️</span>
+                  <div className="flex items-center text-danger">
                     <span className="font-bold">Emergency: {flight.emergency}</span>
                   </div>
                 </div>
@@ -360,13 +350,10 @@ export default function FlightPanel({ flight, isOpen, onClose }: FlightPanelProp
   );
 }
 
-function StatCard({ label, value, icon }: { label: string; value: string; icon: string }) {
+function StatCard({ label, value }: { label: string; value: string }) {
   return (
     <div className="bg-surface-alt rounded-xl p-4">
-      <div className="flex items-center space-x-2 mb-2">
-        <span>{icon}</span>
-        <span className="text-sm text-secondary">{label}</span>
-      </div>
+      <div className="text-sm text-secondary mb-2">{label}</div>
       <div className="text-xl font-bold text-foreground">{value}</div>
     </div>
   );
