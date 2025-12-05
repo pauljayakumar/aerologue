@@ -22,18 +22,7 @@ const GlobeIcon = () => (
   </svg>
 );
 
-const ShieldIcon = () => (
-  <svg className="w-6 h-6" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
-    <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" />
-    <path d="M9 12l2 2 4-4" strokeLinecap="round" strokeLinejoin="round" />
-  </svg>
-);
 
-const UsersIcon = () => (
-  <svg className="w-6 h-6" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
-    <path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2M9 11a4 4 0 100-8 4 4 0 000 8zM23 21v-2a4 4 0 00-3-3.87M16 3.13a4 4 0 010 7.75" />
-  </svg>
-);
 
 const RocketIcon = () => (
   <svg className="w-6 h-6" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
@@ -57,12 +46,6 @@ const CheckIcon = () => (
 export default function InvestorLanding() {
   const [email, setEmail] = useState('');
 
-  const metrics = [
-    { label: 'Travellers Served', value: '50K+', suffix: '/month' },
-    { label: 'Airports Covered', value: '5,000+', suffix: 'worldwide' },
-    { label: 'Airlines Integrated', value: '500+', suffix: 'partners' },
-    { label: 'User Satisfaction', value: '4.9', suffix: '/5' },
-  ];
 
   const features = [
     {
@@ -75,16 +58,6 @@ export default function InvestorLanding() {
       title: 'Live Flight Updates',
       description: 'Real-time notifications for delays, gate changes, and boarding times. Never miss a connection with predictive alerts.',
     },
-    {
-      icon: <ShieldIcon />,
-      title: 'Travel Wallet',
-      description: 'Securely store boarding passes, loyalty cards, and travel documents. Earn rewards with every journey you log.',
-    },
-    {
-      icon: <UsersIcon />,
-      title: 'Social Travel',
-      description: 'Connect with fellow travellers, share experiences, and discover hidden gems at your destinations through our community.',
-    },
   ];
 
   const roadmap = [
@@ -95,7 +68,6 @@ export default function InvestorLanding() {
   ];
 
   const investmentHighlights = [
-    '$800B+ global air travel market growing 5% annually',
     'First-mover in Web3-enabled travel companion space',
     'Freemium model with premium subscriptions & partnerships',
     'Experienced team from aviation and travel tech industries',
@@ -126,7 +98,6 @@ export default function InvestorLanding() {
             </div>
             <div className="hidden md:flex items-center gap-8">
               <a href="#features" className="text-white/70 hover:text-white transition-colors">Features</a>
-              <a href="#metrics" className="text-white/70 hover:text-white transition-colors">Metrics</a>
               <a href="#roadmap" className="text-white/70 hover:text-white transition-colors">Roadmap</a>
               <a href="#invest" className="text-white/70 hover:text-white transition-colors">Invest</a>
             </div>
@@ -208,22 +179,6 @@ export default function InvestorLanding() {
         </div>
       </section>
 
-      {/* Metrics Section */}
-      <section id="metrics" className="py-20 px-6">
-        <div className="max-w-7xl mx-auto">
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
-            {metrics.map((metric, index) => (
-              <div key={index} className="glass-card glass-card-hover p-8 text-center">
-                <div className="text-4xl md:text-5xl font-bold gradient-text mb-2">
-                  {metric.value}
-                  <span className="text-xl text-white/40">{metric.suffix}</span>
-                </div>
-                <p className="text-white/60">{metric.label}</p>
-              </div>
-            ))}
-          </div>
-        </div>
-      </section>
 
       {/* Features Section */}
       <section id="features" className="py-20 px-6">
