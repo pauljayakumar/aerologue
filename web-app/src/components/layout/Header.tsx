@@ -3,12 +3,24 @@
 import Link from 'next/link';
 import Image from 'next/image';
 import { ThemeToggleCompact } from '@/components/ui/ThemeToggle';
+import Icon from '@/components/ui/Icon'; // Import the new Icon component
 
-export default function Header() {
+interface HeaderProps {
+  toggleNav: () => void;
+}
+
+export default function Header({ toggleNav }: HeaderProps) {
   return (
     <header className="bg-surface border-b border-border shadow-sm">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex justify-between items-center h-16">
+          {/* Menu Toggle for small screens */}
+          <div className="flex items-center md:hidden">
+            <button onClick={toggleNav} className="text-foreground-secondary hover:text-foreground">
+              <Icon name="bars-3" className="w-6 h-6" />
+            </button>
+          </div>
+
           {/* Logo */}
           <Link href="/" className="flex items-center">
             <Image
@@ -21,49 +33,11 @@ export default function Header() {
             />
           </Link>
 
-          {/* Navigation */}
-          <nav className="hidden md:flex items-center space-x-6">
-            <Link
-              href="/map"
-              className="text-foreground-secondary hover:text-map transition"
-            >
-              Live Map
-            </Link>
-            <span
-              className="text-foreground-secondary/50 cursor-not-allowed flex items-center gap-1"
-              title="Coming soon"
-            >
-              Flights
-              <svg className="w-3 h-3" fill="currentColor" viewBox="0 0 20 20">
-                <path fillRule="evenodd" d="M5 9V7a5 5 0 0110 0v2a2 2 0 012 2v5a2 2 0 01-2 2H5a2 2 0 01-2-2v-5a2 2 0 012-2zm8-2v2H7V7a3 3 0 016 0z" clipRule="evenodd" />
-              </svg>
-            </span>
-            <span
-              className="text-foreground-secondary/50 cursor-not-allowed flex items-center gap-1"
-              title="Coming soon"
-            >
-              Crossings
-              <svg className="w-3 h-3" fill="currentColor" viewBox="0 0 20 20">
-                <path fillRule="evenodd" d="M5 9V7a5 5 0 0110 0v2a2 2 0 012 2v5a2 2 0 01-2 2H5a2 2 0 01-2-2v-5a2 2 0 012-2zm8-2v2H7V7a3 3 0 016 0z" clipRule="evenodd" />
-              </svg>
-            </span>
-            <span
-              className="text-foreground-secondary/50 cursor-not-allowed flex items-center gap-1"
-              title="Coming soon"
-            >
-              Wallet
-              <svg className="w-3 h-3" fill="currentColor" viewBox="0 0 20 20">
-                <path fillRule="evenodd" d="M5 9V7a5 5 0 0110 0v2a2 2 0 012 2v5a2 2 0 01-2 2H5a2 2 0 01-2-2v-5a2 2 0 012-2zm8-2v2H7V7a3 3 0 016 0z" clipRule="evenodd" />
-              </svg>
-            </span>
-          </nav>
-
-          {/* Right side: Theme toggle + Auth (temporarily disabled) */}
+          {/* Right side: Theme toggle + Auth */}
           <div className="flex items-center space-x-4">
             <ThemeToggleCompact />
-
             {/* Auth buttons temporarily disabled */}
-            <div className="flex items-center space-x-2">
+            <div className="hidden md:flex items-center space-x-2"> {/* Only show on medium and larger screens */}
               <span
                 className="text-sm text-foreground-secondary/50 cursor-not-allowed flex items-center gap-1"
                 title="Coming soon"
